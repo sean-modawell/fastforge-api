@@ -21,7 +21,7 @@ from main_script import scrape_template
 
 
 # --- extract_json_data ---
-def test_extract_json_data_full(): # The id we want is entity-id. It is NOT data-parent-id. Below is the actual schema from my notion.
+def test_extract_json_data_success(): # The id we want is entity-id. It is NOT data-parent-id. Below is the actual schema from my notion.
     test_payload = {
         "id": "88888c",
         "timestamp": "2026-04-27T23:27:54.876Z",
@@ -53,7 +53,7 @@ def test_extract_json_data_full(): # The id we want is entity-id. It is NOT data
     page_id = extract_json_data(test_payload)
     assert page_id == "abc123"
 
-def test_extract_json_data_missing_fields():
+def test_extract_json_data_missing_page_id():
     test_payload = {
         "entity": {
             "type": "page"
@@ -62,6 +62,8 @@ def test_extract_json_data_missing_fields():
     page_id = extract_json_data(test_payload)
     assert page_id is None
 
+def test_extract_json_data_invalid_json():
+    pass
 
 
 # --- request_content ---
@@ -149,7 +151,7 @@ def test_create_prompt_missing_fields():
 
 
 # --- send_prompt ---
-def test_send_prompt_mock_api():
+def test_send_prompt_mock_success():
     mock_ai_response = {
         "new_intro": "The greatest intro of all time.",
         "keyword_list": ["Python", "Flask"],
@@ -167,6 +169,12 @@ def test_send_prompt_mock_api():
     assert "Python" in keyword_list
     assert "GitHub" in missing_keywords
     assert skills == "Python | Flask | REST APIs"
+
+def test_send_prompt_mock_exception():
+    pass
+
+def test_send_prompt_invalid_json():
+    pass
 
 @pytest.mark.skip(reason="Real API call - run manually only") # Has passed
 def test_send_prompt_real():
@@ -186,7 +194,7 @@ def test_send_prompt_real():
 
 
 # --- create_tailored_resume ---
-def test_create_tailored_doc_mock():
+def test_create_tailored_doc_mock_success():
     with (patch("main_script.drive_service") as mock_drive, patch("main_script.docs_service") as mock_docs):
         mock_drive.files().copy().execute.return_value = {"id": "fake_doc_id_123"}
         result = create_tailored_doc(
@@ -199,6 +207,9 @@ def test_create_tailored_doc_mock():
         assert result == "https://docs.google.com/document/d/fake_doc_id_123"
         assert mock_drive.files().copy().execute.called
         assert mock_docs.documents().batchUpdate().execute.called
+
+def test_create_tailored_doc():
+    pass
 
 @pytest.mark.skip(reason="Real API call - run manually only") # Has passed
 def test_create_tailored_doc_real():
@@ -215,7 +226,7 @@ def test_create_tailored_doc_real():
 
 
 # --- scrape_template ---
-def test_scrape_template_mock():
+def test_scrape_template_mock_success():
     with (patch("main_script.drive_service") as mock_drive):
         mock_bytes = "testing".encode("utf-8")
         mock_drive.files().export().execute.return_value = mock_bytes
@@ -223,8 +234,26 @@ def test_scrape_template_mock():
         assert result == "testing"
         assert mock_drive.files().export().execute.called
 
+def test_scrape_template_mock_exception():
+    pass
+
+def test_scrape_template_invalid_str():
+    pass
+
 @pytest.mark.skip(reason="Real API call - run manually only") # Has passed
 def test_scrape_template_real():
     result = scrape_template()
 
     assert result is not None
+
+
+
+# --- create_payload ---
+
+
+
+# --- send_payload ---
+
+
+
+# --- handle_webhook ---
