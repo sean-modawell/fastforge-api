@@ -4,6 +4,7 @@ import sys
 import os
 from unittest.mock import patch, MagicMock
 import json
+import requests
 
 # --- Define path ---
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -13,7 +14,7 @@ from main_script import extract_json_data
 from main_script import request_content
 from main_script import request_fields
 from main_script import create_prompt
-from main_script import send_prompt
+from main_script import send_prompt 
 from main_script import create_tailored_doc
 from main_script import scrape_template
 
@@ -64,20 +65,73 @@ def test_extract_json_data_missing_fields():
 
 
 # --- request_content ---
-def test_request_content_mock():
-    pass
+test_page_id = "3123e484e34b8019bd4de26a14d50d72"
+
+def test_request_content_mock_success():
+    mock_response = MagicMock()
+    mock_response.raise_for_status = MagicMock()  # No-op; simulates 200 OK
+    mock_response.json.return_value = {"markdown": "# Software\n\nTitle section..."}
+    with patch("requests.get", return_value=mock_response) as mock_get:
+        result = request_content(test_page_id)
+    mock_get.assert_called_once()
+    assert result == "# Software\n\nTitle section..."
+
+def test_request_content_mock_request_exception():
+    with patch("requests.get", side_effect=requests.exceptions.RequestException("timeout")):
+        result = request_content(test_page_id)
+    assert result is None
+
+def test_request_content_mock_invalid_json():
+    mock_response = MagicMock()
+    mock_response.raise_for_status = MagicMock()
+    mock_response.json.side_effect = json.JSONDecodeError("msg", "doc", 0)
+    with patch("requests.get", return_value=mock_response):
+        result = request_content(test_page_id)
+    assert result is None
 
 @pytest.mark.skip(reason="Real API call - run manually only")
 def test_request_content_real():
-    pass
+    result = request_content(test_page_id)
+    assert result is not None
+    assert isinstance(result, str)
 
-# === request_fields ---
-def test_request_fields_mock():
-    pass
+
+
+# --- request_fields ---
+mock_fields_payload = "Hello"
+
+def test_request_fields_mock_success():
+    mock_response = MagicMock()
+    mock_response.raise_for_status = MagicMock()
+    mock_response.json.return_value = mock_fields_payload
+    with patch("requests.get", return_value=mock_response) as mock_get:
+        result = request_fields(test_page_id)
+    mock_get.assert_called_once()
+    assert result == (7, "Software Engineer Resume", "Acme Corp")
+
+def test_request_fields_mock_request_exception():
+    with patch("requests.get", side_effect=requests.exceptions.RequestException("connection error")):
+        result = request_fields(test_page_id)
+    assert result is None
+
+def test_request_fields_mock_invalid_json():
+    mock_response = MagicMock()
+    mock_response.raise_for_status = MagicMock()
+    mock_response.json.side_effect = json.JSONDecodeError("msg", "doc", 0)
+    with patch("requests.get", return_value=mock_response):
+        result = request_fields(test_page_id)
+    assert result is None
 
 @pytest.mark.skip(reason="Real API call - run manually only")
 def test_request_fields_real():
-    pass
+    result = request_fields(test_page_id)
+    assert result is not None
+    record_id, doc_heading, company = result
+    assert isinstance(record_id, int)
+    assert isinstance(doc_heading, str)
+    assert isinstance(company, str)
+
+
 
 # --- create_prompt ---
 def test_create_prompt_full():
@@ -96,21 +150,17 @@ def test_create_prompt_missing_fields():
 
 # --- send_prompt ---
 def test_send_prompt_mock_api():
-    fake_ai_response = {
+    mock_ai_response = {
         "new_intro": "The greatest intro of all time.",
-        "keywords_list": ["Python", "Flask"],
+        "keyword_list": ["Python", "Flask"],
         "missing_keywords": ["GitHub"],
         "skills": "Python | Flask | REST APIs"
     }
-    # Utilizing MagicMock to intercept the API call for testing purposes
     mock_response = MagicMock()
-    mock_response.text = fake_ai_response
-
-    # 'patch' intercepts the real Gemini call and returns our fake instead
+    mock_response.text = mock_ai_response
     with patch("main_script.genai.Client") as mock_client:
         mock_client.return_value.models.generate_content.return_value = mock_response
         result = send_prompt("test prompt")
-
     assert result is not None
     new_intro, keyword_list, missing_keywords, skills = result
     assert new_intro == "The greatest intro of all time."
@@ -119,18 +169,18 @@ def test_send_prompt_mock_api():
     assert skills == "Python | Flask | REST APIs"
 
 @pytest.mark.skip(reason="Real API call - run manually only") # Has passed
-def test_send_prompt_real_api():
+def test_send_prompt_real():
     test_prompt = (
         "Respond ONLY with a valid JSON object containing exactly these keys: "
-        "new_intro (string), keywords_list (array of strings), "
+        "new_intro (string), keyword_list (array of strings), "
         "missing_keywords (array of strings), skills (string). "
         "Use placeholder values."
     )
     result = send_prompt(test_prompt)
     assert result is not None
-    new_intro, keywords_list, missing_keywords, skills = result
+    new_intro, keyword_list, missing_keywords, skills = result
     assert isinstance(new_intro, str)
-    assert isinstance(keywords_list, list)
+    assert isinstance(keyword_list, list)
     assert isinstance(skills, str)
 
 
@@ -170,7 +220,6 @@ def test_scrape_template_mock():
         mock_bytes = "testing".encode("utf-8")
         mock_drive.files().export().execute.return_value = mock_bytes
         result = scrape_template()
-
         assert result == "testing"
         assert mock_drive.files().export().execute.called
 
