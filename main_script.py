@@ -109,8 +109,8 @@ def request_fields(page_id): # Request and save additional fields
         try:
             data = response.json()
             record_id = data.get("properties").get("ID").get("unique_id").get("number")
-            doc_heading = data.get("properties").get("title").get("rich_text").get("plain_text")
-            company = data.get("properties").get("company").get("rich_text").get("plain_text")
+            doc_heading = data.get("properties").get("title").get("rich_text")[0].get("plain_text")
+            company = data.get("properties").get("company").get("rich_text")[0].get("plain_text")
             print("Successfully saved page properties!")
             return record_id, doc_heading, company
 
@@ -157,8 +157,8 @@ def send_prompt(prompt): # Send & Receive
             ai_data = json.loads(json.dumps(response.text))
 
             new_intro = ai_data.get("new_intro", "")
-            keyword_list = ai_data.get("keywords_list", [])
-            missing_keywords = ai_data.get("missing_keywords", [])
+            keyword_list = ai_data.get("keyword_list", "")
+            missing_keywords = ai_data.get("missing_keywords", "")
             skills = ai_data.get("skills", "")
             print("Successfully parsed AI response!")
             return new_intro, keyword_list, missing_keywords, skills

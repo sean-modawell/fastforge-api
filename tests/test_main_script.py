@@ -91,7 +91,7 @@ def test_request_content_mock_invalid_json():
         result = request_content(test_page_id)
     assert result is None
 
-@pytest.mark.skip(reason="Real API call - run manually only")
+@pytest.mark.skip(reason="Real API call - run manually only") # Has passed
 def test_request_content_real():
     result = request_content(test_page_id)
     assert result is not None
@@ -100,7 +100,8 @@ def test_request_content_real():
 
 
 # --- request_fields ---
-mock_fields_payload = "Hello"
+with open("tests/api-response.json", "r") as f:
+    mock_fields_payload = json.load(f)
 
 def test_request_fields_mock_success():
     mock_response = MagicMock()
@@ -109,7 +110,7 @@ def test_request_fields_mock_success():
     with patch("requests.get", return_value=mock_response) as mock_get:
         result = request_fields(test_page_id)
     mock_get.assert_called_once()
-    assert result == (7, "Software Engineer Resume", "Acme Corp")
+    assert result == (1, "Project Manager", "Acme")
 
 def test_request_fields_mock_request_exception():
     with patch("requests.get", side_effect=requests.exceptions.RequestException("connection error")):
@@ -124,7 +125,7 @@ def test_request_fields_mock_invalid_json():
         result = request_fields(test_page_id)
     assert result is None
 
-@pytest.mark.skip(reason="Real API call - run manually only")
+@pytest.mark.skip(reason="Real API call - run manually only") # Has passed
 def test_request_fields_real():
     result = request_fields(test_page_id)
     assert result is not None
@@ -171,9 +172,13 @@ def test_send_prompt_mock_success():
     assert skills == "Python | Flask | REST APIs"
 
 def test_send_prompt_mock_exception():
+    result = "TODO"
+    #assert result is None
     pass
 
 def test_send_prompt_invalid_json():
+    result = "TODO"
+    #assert result is None
     pass
 
 @pytest.mark.skip(reason="Real API call - run manually only") # Has passed
@@ -235,25 +240,47 @@ def test_scrape_template_mock_success():
         assert mock_drive.files().export().execute.called
 
 def test_scrape_template_mock_exception():
+    result = "TODO"
+    #assert result is None
     pass
 
 def test_scrape_template_invalid_str():
+    result = "TODO"
+    #assert result is None
     pass
 
 @pytest.mark.skip(reason="Real API call - run manually only") # Has passed
 def test_scrape_template_real():
     result = scrape_template()
-
     assert result is not None
 
 
 
 # --- create_payload ---
+def test_create_payload_success():
+    pass
 
+def test_create_payload_missing_field():
+    pass
 
 
 # --- send_payload ---
+def test_send_payload_mock_success():
+    pass
 
+def test_send_payload_mock_exception():
+    result = "TODO"
+    #assert result is None
+    pass
+
+def test_send_payload_mock_invalid_json():
+    result = "TODO"
+    #assert result is None
+    pass
+
+@pytest.mark.skip(reason="Real API call - run manually only")
+def test_send_payload_real():
+    pass
 
 
 # --- handle_webhook ---
