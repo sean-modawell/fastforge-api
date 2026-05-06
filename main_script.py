@@ -121,7 +121,6 @@ def request_fields(page_id): # Request and save additional fields
     except requests.exceptions.RequestException as e:
         print(f"Request failed: {e}")
         return None
-    pass
 
 
 def scrape_template(): # Pull Resume from Google Drive as string
