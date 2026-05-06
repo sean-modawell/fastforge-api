@@ -8,7 +8,7 @@ A Python-based microservice utilizing LLM, webhooks, and databases to dynamicall
 
 This project is still in development. I work on it in my freetime. There are 9 helper functions to the main webhook.
 
-Current Status: 7 of 9 helper functions are fully functional and tested.
+Current Status: 9 of 9 helper functions are tested and functional. Greater error handling to come.
 
 > **Note:** I remove `pass` from a function once it is complete and has passed pytest.
 
@@ -26,7 +26,7 @@ Use Cases
 The workflow:
 
 1. Create a new page in Notion. Using the **Save to Notion** browser extension
-2. Notion sends a webhook to this app
+2. Notion sends a webhook to this microservice, FastForge API
 3. The app pulls the context data, fetches your base template from Google Drive, and sends everything to **Google Gemini**
 4. Gemini returns structured suggestions for tailoring your template document
 5. The results are saved to a new **Google Doc** for your review before proceeding
