@@ -10,7 +10,7 @@ import requests
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # --- Import functions from script ---
-from main_script import extract_json_data
+from main_script import create_payload, extract_json_data, send_payload
 from main_script import request_content
 from main_script import request_fields
 from main_script import create_prompt
@@ -62,8 +62,7 @@ def test_extract_json_data_missing_page_id():
     page_id = extract_json_data(test_payload)
     assert page_id is None
 
-def test_extract_json_data_invalid_json():
-    pass
+# def test_extract_json_data_invalid_json():
 
 
 # --- request_content ---
@@ -171,15 +170,11 @@ def test_send_prompt_mock_success():
     assert "GitHub" in missing_keywords
     assert skills == "Python | Flask | REST APIs"
 
-def test_send_prompt_mock_exception():
-    result = "TODO"
-    #assert result is None
-    pass
+# def test_send_prompt_mock_exception():
+    # assert result is None
 
-def test_send_prompt_invalid_json():
-    result = "TODO"
-    #assert result is None
-    pass
+# def test_send_prompt_invalid_json():
+    # assert result is None
 
 @pytest.mark.skip(reason="Real API call - run manually only") # Has passed
 def test_send_prompt_real():
@@ -213,8 +208,7 @@ def test_create_tailored_doc_mock_success():
         assert mock_drive.files().copy().execute.called
         assert mock_docs.documents().batchUpdate().execute.called
 
-def test_create_tailored_doc():
-    pass
+# def test_create_tailored_doc_exception():
 
 @pytest.mark.skip(reason="Real API call - run manually only") # Has passed
 def test_create_tailored_doc_real():
@@ -239,15 +233,13 @@ def test_scrape_template_mock_success():
         assert result == "testing"
         assert mock_drive.files().export().execute.called
 
-def test_scrape_template_mock_exception():
+# def test_scrape_template_mock_exception():
     result = "TODO"
     #assert result is None
-    pass
 
-def test_scrape_template_invalid_str():
+# def test_scrape_template_invalid_str():
     result = "TODO"
     #assert result is None
-    pass
 
 @pytest.mark.skip(reason="Real API call - run manually only") # Has passed
 def test_scrape_template_real():
@@ -258,29 +250,63 @@ def test_scrape_template_real():
 
 # --- create_payload ---
 def test_create_payload_success():
-    pass
+    result = create_payload(
+        new_intro="Hello world",
+        keyword_list="one | two | three",
+        missing_keywords="four | five | six",
+        tailored_doc_url="www.example.com",
+        skills="seven | eight | nine"
+    )
+    assert result is not None
+    assert result["properties"]["intro_paragraph"]["rich_text"][0]["text"]["content"] == "Hello world"
+    assert result["properties"]["keyword_list"]["rich_text"][0]["text"]["content"] == "one | two | three"
+    assert result["properties"]["missing_keywords"]["rich_text"][0]["text"]["content"] == "four | five | six"
+    assert result["properties"]["tailored_doc_url"]["url"] == "www.example.com"
+    assert result["properties"]["skills"]["rich_text"][0]["text"]["content"] == "seven | eight | nine"
 
-def test_create_payload_missing_field():
-    pass
+# def test_create_payload_missing_field():
 
 
 # --- send_payload ---
 def test_send_payload_mock_success():
-    pass
+    mock_payload = {
+        "properties": {
+            "status": {
+                "status": { "name": "review_doc" },
+            },
+            "intro_paragraph": { "rich_text": [{ "text": { "content": "new_intro" } }] },
+            "keyword_list": { "rich_text": [{ "text": { "content": "keyword_list" } }] },
+            "missing_keywords": { "rich_text": [{ "text": { "content": "missing_keywords" } }] },
+            "tailored_doc_url": { "url": "tailored_doc_url" },
+            "skills": { "rich_text": [{ "text": { "content": "skills" } }] },
+        },
+    }
+    mock_response = MagicMock()
+    mock_response.raise_for_status = MagicMock()
+    mock_response.json.return_value = {
+        "object": "page",
+        "id": "mock",
+        "properties":{}
+    }
+    with patch("requests.patch", return_value=mock_response) as mock_patch:
+        result = send_payload(page_id="mock", payload=mock_payload)
+    mock_patch.assert_called_once()
+    called_url = mock_patch.call_args[0][0]
+    assert called_url == "https://api.notion.com/v1/pages/mock"
+    mock_response.raise_for_status.assert_called_once()
+    assert result == mock_response.json.return_value
+    assert result["id"] == "mock"
 
-def test_send_payload_mock_exception():
+# def test_send_payload_mock_exception():
     result = "TODO"
     #assert result is None
-    pass
 
-def test_send_payload_mock_invalid_json():
+# def test_send_payload_mock_invalid_json():
     result = "TODO"
     #assert result is None
-    pass
 
-@pytest.mark.skip(reason="Real API call - run manually only")
-def test_send_payload_real():
-    pass
+# @pytest.mark.skip(reason="Real API call - run manually only")
+# def test_send_payload_real():
 
 
 # --- handle_webhook ---

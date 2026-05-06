@@ -224,12 +224,10 @@ def send_payload(page_id, payload): # Push API call to Notion
         "Authorization": f"Bearer {database_api_key}",
         "Content-Type": "application/json"
     }
-
-    response = requests.patch(url, json=payload, headers=headers) # Does not need to return anything. The PATCH request is sent from here
-
+    response = requests.patch(url, json=payload, headers=headers) # Returns an updated JSON for the page
+    response.raise_for_status()
     # Notion has an avg rate limit of 3 incoming requests per second 
-
-    print(response.text)
+    return response.json()
     pass
 
 

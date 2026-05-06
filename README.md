@@ -201,6 +201,39 @@ If you do not have a business account or paid account, have no fear. This can be
 
 ## Notion API Notes
 
+[API Reference](https://developers.notion.com/reference/intro)
+
+rich_text objects
+
+rich_text is a LIST of dictionaries. This is to support multiple formats. Where a new format begins, a new block/dictionary is added to the list.
+
+```
+"rich_text": [
+    {
+        "type": "text",
+        "text": {
+            "content": "example",
+            "link": null
+        },
+        "annotations": {
+            "bold": false,
+            "italic": false,
+            "strikethrough": false,
+            "underline": false,
+            "code": false,
+            "color": "default"
+        },
+        "plain_text": "example",
+        "href": null
+    }
+]
+```
+Some very important notes:
+plain_text is READ-ONLY. It is to provide "a convenient way for developers to access unformatted text from the Notion block"
+This is the property you will want to access when using a GET request
+
+In order to POST text, you will need to write to the text.content property. Any additional formatting is optional.
+
 
 -----
 
