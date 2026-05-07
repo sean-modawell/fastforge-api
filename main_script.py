@@ -231,8 +231,8 @@ def send_payload(page_id, payload): # Push API call to Notion
 
 
 # --- Main Webhook ---
-@app.route('/api/v1/doc-build', methods=['POST'])
-def handle_webhook():
+@app.route('/api/v1/doc/forge', methods=['POST'])
+def forge_doc():
     provided_key = request.headers.get('Authorization')
     if provided_key != f"Bearer {my_client_password}":
         return jsonify({"status": "error", "message": "Unauthorized request"}), 401
