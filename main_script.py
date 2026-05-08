@@ -14,10 +14,13 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 import requests
+import hmac
+import hashlib
 
 # --- Keys ---
 load_dotenv()
 database_api_key = os.getenv("notion_local_api_key")
+notion_verification_token = os.getenv("notion_verification_token")
 gemini_api_key = os.getenv("gemini_local_api_key")
 my_client_password = os.getenv("my_local_client_password")
 
@@ -55,6 +58,40 @@ current_month = now.month
 current_year = now.year
 
 # --- Helper Functions ---
+def verify_notion_signature(request):
+    signature = request.headers.get('X-Notion-Signature')
+    body = request.get_data()
+    expected = 'sha256=' + hmac.new(
+        os.environ['NOTION_VERIFICATION_TOKEN'].encode(),
+        body,
+        hashlib.sha256
+    ).hexdigest()
+    return hmac.compare_digest(signature, expected)
+
+"""
+body_json = json.dumps(body, separators=(",", ":"))  # Minified JSON, matches JSON.stringify
+hmac_obj = hmac.new(
+    verification_token.encode("utf-8"),
+    body_json.encode("utf-8"),
+    hashlib.sha256
+)
+calculated_signature = "sha256=" + hmac_obj.hexdigest()
+
+# Assume headers is a dict containing HTTP headers
+# Example:
+# headers = {"X-Notion-Signature": "<signature from request>"}
+
+# Use hmac.compare_digest for timing-safe comparison
+is_trusted_payload = hmac.compare_digest(
+    calculated_signature,
+    headers["X-Notion-Signature"]
+)
+
+if not is_trusted_payload:
+    # Ignore the event
+    return
+"""
+
 
 def extract_json_data(incoming_data): # Process the API call from Notion and pull the PAGE_ID
     print("Call received! Data payload: ", incoming_data)
@@ -233,6 +270,14 @@ def send_payload(page_id, payload): # Push API call to Notion
 # --- Main Webhook ---
 @app.route('/api/v1/doc/forge', methods=['POST'])
 def forge_doc():
+
+
+    # Notion first sends a verification code. This block of code is to capture it in the Render Log so we can save it
+    data = request.get_json()
+    print("Incoming payload:", data)  # this shows up in Render logs
+    return {"status": "ok"}, 200
+
+    """
     provided_key = request.headers.get('Authorization')
     if provided_key != f"Bearer {my_client_password}":
         return jsonify({"status": "error", "message": "Unauthorized request"}), 401
@@ -280,7 +325,7 @@ def forge_doc():
     send_payload(page_id, payload)
 
     return jsonify({"status": "success", "message": "POST request processed successfully"}), 200
-
+"""
 if __name__ == '__main__':
     print("Starting local server on port 5000...")
     app.run(port=5000)
