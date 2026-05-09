@@ -159,7 +159,7 @@ def test_send_prompt_mock_success():
         "skills": "Python | Flask | REST APIs"
     }
     mock_response = MagicMock()
-    mock_response.text = mock_ai_response
+    mock_response.text = json.dumps(mock_ai_response)
     with patch("main_script.genai.Client") as mock_client:
         mock_client.return_value.models.generate_content.return_value = mock_response
         result = send_prompt("test prompt")

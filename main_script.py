@@ -172,7 +172,7 @@ def send_prompt(prompt): # Send & Receive
         print("Response from AI received!")
         print("Parsing response...")
         try:
-            ai_data = json.loads(json.dumps(response.text))
+            ai_data = json.loads(response.text)
 
             new_intro = ai_data.get("new_intro", "")
             keyword_list = ai_data.get("keyword_list", "")
