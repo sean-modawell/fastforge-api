@@ -59,8 +59,16 @@ current_year = now.year
 
 # --- Helper Functions ---
 def verify_notion_signature(request):
-    weave = request.headers.get('X-Notion-Signature')
-    body = request.get_data()
+    print("Verifying signature...")
+    try:
+        weave = request.headers.get('X-Notion-Signature')
+        print("Successfully pulled Signature!")
+        body = request.get_data()
+        print("Successfully pulled payload!")
+    except json.JSONDecodeError:
+        print("Post request is not valid JSON")
+        return None
+
     yarn = 'sha256=' + hmac.new(
         notion_verification_token.encode(),
         body,
@@ -69,7 +77,6 @@ def verify_notion_signature(request):
     return hmac.compare_digest(weave, yarn)
 
 def extract_json_data(incoming_data): # Process the API call from Notion and pull the PAGE_ID
-    print("Call received! Data payload: ", incoming_data)
     print("Extracting data...")
     try:
         page_id = incoming_data.get("entity").get("id")
@@ -245,7 +252,7 @@ def send_payload(page_id, payload): # Push API call to Notion
 # --- Main Webhook ---
 @app.route('/api/v1/doc/forge', methods=['POST'])
 def forge_doc():
-
+    print("Post Request received!")
     """
     # Notion first sends a verification code. This block of code is to capture it in the Render Log so we can save it
     data = request.get_json()
@@ -253,10 +260,12 @@ def forge_doc():
     return jsonify({"status": "ok"}), 200
     # It is recommended to comment out the rest of the function 
     """
-    
+
     if not verify_notion_signature(request):
+        print("Error: Invalid signature")
         return jsonify({"status": "error", "message": "Unauthorized request"}), 401
 
+    print("Signature verified")
     incoming_data = request.json
     if not incoming_data:
         return jsonify({"status": "error", "message": "No data provided"}), 400
