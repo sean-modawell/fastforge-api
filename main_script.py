@@ -111,7 +111,6 @@ def request_content(page_id): # Request page content
     except requests.exceptions.RequestException as e:
         print(f"Request failed: {e}")
         return None
-    pass
 
 # I am using notion as my database. The fields are deeply embedded in the json files.
 def request_fields(page_id): # Request and save additional fields
@@ -220,6 +219,7 @@ def create_tailored_doc(record_id, company, doc_heading, new_intro, skills): # C
     return tailored_doc_url
 
 def create_payload(new_intro, keyword_list, missing_keywords, tailored_doc_url, skills): # Prepare JSON payload for Notion
+    print("Constructing payload...")
     payload = {
         "properties": {
             "status": {
@@ -232,8 +232,8 @@ def create_payload(new_intro, keyword_list, missing_keywords, tailored_doc_url, 
             "skills": { "rich_text": [{ "text": { "content": f"{skills}" } }] },
         },
     }
+    print("Payload is ready")
     return payload
-    pass
 
 def send_payload(page_id, payload): # Push API call to Notion
     url = f"https://api.notion.com/v1/pages/{page_id}"
@@ -242,11 +242,11 @@ def send_payload(page_id, payload): # Push API call to Notion
         "Authorization": f"Bearer {database_api_key}",
         "Content-Type": "application/json"
     }
+    print("Sending PATCH request")
     response = requests.patch(url, json=payload, headers=headers) # Returns an updated JSON for the page
     response.raise_for_status()
-    # Notion has an avg rate limit of 3 incoming requests per second 
+    # Notion has an avg rate limit of 3 incoming requests per second
     return response.json()
-    pass
 
 
 # --- Main Webhook ---
@@ -307,7 +307,8 @@ def forge_doc():
 
     payload = create_payload(new_intro, keyword_list, missing_keywords, tailored_doc_url, skills)
     send_payload(page_id, payload)
-
+    print("Successfully sent PATCH request")
+    print("Workflow complete")
     return jsonify({"status": "success", "message": "POST request processed successfully"}), 200
 
 if __name__ == '__main__':

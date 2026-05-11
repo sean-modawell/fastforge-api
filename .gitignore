@@ -8,5 +8,6 @@ prompt.txt
 token.json
 api-response.json
 notion_sandbox.py
+test_request.http
 
 __pycache__/
