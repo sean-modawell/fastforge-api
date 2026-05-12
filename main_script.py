@@ -16,6 +16,11 @@ from google.auth.transport.requests import Request
 import requests
 import hmac
 import hashlib
+import logging
+
+# --- Logging Settings ---
+logging.basicConfig(level=logging.DEBUG) # DEBUG > INFO > WARNING > ERROR > CRITICAL
+logger = logging.getLogger(__name__)
 
 # --- Keys ---
 load_dotenv()
@@ -59,14 +64,12 @@ current_year = now.year
 
 # --- Helper Functions ---
 def verify_notion_signature(request):
-    print("Verifying signature...")
+    logger.info("Verifying signature...")
     try:
         weave = request.headers.get('X-Notion-Signature')
-        print("Successfully pulled Signature!")
         body = request.get_data()
-        print("Successfully pulled payload!")
     except json.JSONDecodeError:
-        print("Post request is not valid JSON")
+        logger.error("Post request is not valid JSON")
         return None
 
     yarn = 'sha256=' + hmac.new(
@@ -77,14 +80,14 @@ def verify_notion_signature(request):
     return hmac.compare_digest(weave, yarn)
 
 def extract_json_data(incoming_data): # Process the API call from Notion and pull the PAGE_ID
-    print("Extracting data...")
+    logger.debug("Extracting data...")
     try:
         page_id = incoming_data.get("entity").get("id")
-        print("Successfully saved new page_id!")
+        logger.debug("Successfully saved new page_id!")
         return page_id
 
     except json.JSONDecodeError:
-        print("Response is not valid JSON")
+        logger.error("Response is not valid JSON")
         return None
 
 def request_content(page_id): # Request page content
@@ -93,23 +96,24 @@ def request_content(page_id): # Request page content
         "Notion-Version": "2026-03-11",
         "Authorization": f"Bearer {database_api_key}"
     }
-    print("Requesting page contents...")
+    logger.debug("Requesting page contents...")
     try:
         response = requests.get(url, headers=headers, timeout=10)
+        logger.debug("Notion [%s]: %s", response.status_code, response.text)
         response.raise_for_status()
-        print("Response received! Parsing for page contents...")
+        logger.info("Response received! Parsing for page contents...")
         try:
             data = response.json()
             page_content = data.get("markdown")
-            print("Successfully saved page contents!")
+            logger.info("Successfully saved page contents!")
             return page_content
 
         except json.JSONDecodeError:
-            print("Response is not valid JSON")
+            logger.error("Response is not valid JSON")
             return None
             
     except requests.exceptions.RequestException as e:
-        print(f"Request failed: {e}")
+        logger.error("Request failed: %s, e")
         return None
 
 # I am using notion as my database. The fields are deeply embedded in the json files.
@@ -119,25 +123,26 @@ def request_fields(page_id): # Request and save additional fields
         "Notion-Version": "2026-03-11",
         "Authorization": f"Bearer {database_api_key}"
     }
-    print("Sending GET request for additional fields...")
+    logger.info("Sending GET request for additional fields...")
     try:
         response = requests.get(url, headers=headers, timeout=10)
+        logger.debug("Notion GET Request [%s]: %s", response.status_code, response.text)
         response.raise_for_status()
-        print("Response received! Parsing...")
+        logger.info("Response received! Parsing...")
         try:
             data = response.json()
             record_id = data.get("properties").get("ID").get("unique_id").get("number")
             doc_heading = data.get("properties").get("title").get("rich_text")[0].get("plain_text")
             company = data.get("properties").get("company").get("rich_text")[0].get("plain_text")
-            print("Successfully saved page properties!")
+            logger.info("Successfully saved page properties!")
             return record_id, doc_heading, company
 
         except json.JSONDecodeError:
-            print("Response is not valid JSON")
+            logger.error("Response is not valid JSON")
             return None
 
     except requests.exceptions.RequestException as e:
-        print(f"Request failed: {e}")
+        logger.error("Request failed: %s", e)
         return None
 
 
@@ -159,7 +164,7 @@ def create_prompt(page_content, template_text, prompt_file="prompt.txt"): # Call
 
 def send_prompt(prompt): # Send & Receive
     client = genai.Client(api_key=gemini_api_key)
-    print("Sending prompt to Gemini. Please wait...")
+    logger.info("Sending prompt to Gemini. Please wait...")
     try:
         response = client.models.generate_content(
             model='gemini-2.5-flash',
@@ -168,8 +173,8 @@ def send_prompt(prompt): # Send & Receive
                 response_mime_type="application/json"
             )
         )
-        print("Response from AI received!")
-        print("Parsing response...")
+        logger.info("Response from AI received!")
+        logger.info("Parsing response...")
         try:
             ai_data = json.loads(response.text)
 
@@ -177,16 +182,16 @@ def send_prompt(prompt): # Send & Receive
             keyword_list = ai_data.get("keyword_list", "")
             missing_keywords = ai_data.get("missing_keywords", "")
             skills = ai_data.get("skills", "")
-            print("Successfully parsed AI response!")
+            logger.info("Successfully parsed AI response!")
             return new_intro, keyword_list, missing_keywords, skills
 
         except json.JSONDecodeError as json_err:
-            print(f"Failed to parse AI response: {json_err}")
-            print("Adjust your prompt to not include conversational text.")
+            logger.error("Failed to parse AI response: %s", json_err)
+            logger.error("Adjust your prompt to not include conversational text.")
             return None
     
     except Exception as err:
-        print(f"AI call failed: {err}")
+        logger.error("AI call failed: %s ", err)
         return None
 # Add to the send_prompt function a retry loop in case of receiving a 503 error from Gemini
 
@@ -215,11 +220,11 @@ def create_tailored_doc(record_id, company, doc_heading, new_intro, skills): # C
 
     # Return URL
     tailored_doc_url = f"https://docs.google.com/document/d/{new_doc_id}"
-    print(f"Tailored document created: {tailored_doc_url}")
+    logger.info(f"Tailored document created: {tailored_doc_url}")
     return tailored_doc_url
 
 def create_payload(new_intro, keyword_list, missing_keywords, tailored_doc_url, skills): # Prepare JSON payload for Notion
-    print("Constructing payload...")
+    logger.debug("Constructing payload...")
     payload = {
         "properties": {
             "status": {
@@ -232,7 +237,7 @@ def create_payload(new_intro, keyword_list, missing_keywords, tailored_doc_url, 
             "skills": { "rich_text": [{ "text": { "content": f"{skills}" } }] },
         },
     }
-    print("Payload is ready")
+    logger.debug("Payload created")
     return payload
 
 def send_payload(page_id, payload): # Push API call to Notion
@@ -244,6 +249,7 @@ def send_payload(page_id, payload): # Push API call to Notion
     }
     print("Sending PATCH request")
     response = requests.patch(url, json=payload, headers=headers) # Returns an updated JSON for the page
+    logger.debug("Notion PATCH Request [%s]: %s", response.status_code, response.text)
     response.raise_for_status()
     # Notion has an avg rate limit of 3 incoming requests per second
     return response.json()
@@ -262,10 +268,10 @@ def forge_doc():
     """
 
     if not verify_notion_signature(request):
-        print("Error: Invalid signature")
+        logger.error("Error: Invalid signature")
         return jsonify({"status": "error", "message": "Unauthorized request"}), 401
 
-    print("Signature verified")
+    logger.debug("Signature verified")
     incoming_data = request.json
     if not incoming_data:
         return jsonify({"status": "error", "message": "No data provided"}), 400
@@ -307,8 +313,8 @@ def forge_doc():
 
     payload = create_payload(new_intro, keyword_list, missing_keywords, tailored_doc_url, skills)
     send_payload(page_id, payload)
-    print("Successfully sent PATCH request")
-    print("Workflow complete")
+    logger.info("Successfully sent PATCH request")
+    logger.info("Workflow complete")
     return jsonify({"status": "success", "message": "POST request processed successfully"}), 200
 
 if __name__ == '__main__':
