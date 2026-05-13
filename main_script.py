@@ -300,7 +300,7 @@ def forge_doc():
         return jsonify({"status": "error", "message": "Could not pull additional fields"}), 400
     record_id, doc_heading, company = result
 
-    result = scrape_template()
+    result = scrape_template(drive_service)
     if result is None:
         return jsonify({"status": "error", "message": "Failed to pull template"}), 400
     template_text = result
