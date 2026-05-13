@@ -11,6 +11,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 # --- Import functions from script ---
 from main_script import create_payload, extract_json_data, send_payload
+from main_script import get_credentials, get_drive_service, get_docs_service
 from main_script import request_content
 from main_script import request_fields
 from main_script import create_prompt
@@ -18,7 +19,9 @@ from main_script import send_prompt
 from main_script import create_tailored_doc
 from main_script import scrape_template
 
-
+creds = get_credentials()
+drive_service = get_drive_service(creds)
+docs_service = get_docs_service(creds)
 
 # --- extract_json_data ---
 def test_extract_json_data_success(): # The id we want is entity-id. It is NOT data-parent-id. Below is the actual schema from my notion.
@@ -195,9 +198,12 @@ def test_send_prompt_real():
 
 # --- create_tailored_resume ---
 def test_create_tailored_doc_mock_success():
-    with (patch("main_script.drive_service") as mock_drive, patch("main_script.docs_service") as mock_docs):
+        mock_drive = MagicMock()
+        mock_docs = MagicMock()
         mock_drive.files().copy().execute.return_value = {"id": "fake_doc_id_123"}
         result = create_tailored_doc(
+            drive_service=mock_drive,
+            docs_service=mock_docs,
             record_id="R2D2",
             company="NOMA",
             doc_heading="Software Engineer",
@@ -213,6 +219,8 @@ def test_create_tailored_doc_mock_success():
 @pytest.mark.skip(reason="Real API call - run manually only") # Has passed
 def test_create_tailored_doc_real():
     result = create_tailored_doc(
+        drive_service=drive_service,
+        docs_service=docs_service,
         record_id="R2D2",
         company="NOMA",
         doc_heading="Software Engineer",
@@ -226,12 +234,11 @@ def test_create_tailored_doc_real():
 
 # --- scrape_template ---
 def test_scrape_template_mock_success():
-    with (patch("main_script.drive_service") as mock_drive):
-        mock_bytes = "testing".encode("utf-8")
-        mock_drive.files().export().execute.return_value = mock_bytes
-        result = scrape_template()
-        assert result == "testing"
-        assert mock_drive.files().export().execute.called
+    mock_drive = MagicMock()
+    mock_drive.files().export().execute.return_value = "testing".encode("utf-8")
+    result = scrape_template(mock_drive)
+    assert result == "testing"
+    assert mock_drive.files().export().execute.called
 
 # def test_scrape_template_mock_exception():
     result = "TODO"
@@ -243,7 +250,7 @@ def test_scrape_template_mock_success():
 
 @pytest.mark.skip(reason="Real API call - run manually only") # Has passed
 def test_scrape_template_real():
-    result = scrape_template()
+    result = scrape_template(drive_service)
     assert result is not None
 
 

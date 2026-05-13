@@ -54,6 +54,14 @@ def get_credentials():
                 token.write(creds.to_json())
     return creds
 
+def get_drive_service(creds):
+    drive_service = build("drive", "v3", credentials=creds)
+    return drive_service
+
+def get_docs_service(creds):
+    docs_service = build("docs", "v1", credentials=creds)
+    return docs_service
+
 # --- Initial Setup ---
 app = Flask(__name__)
 now = datetime.now()
@@ -144,7 +152,7 @@ def request_fields(page_id): # Request and save additional fields
         return None
 
 
-def scrape_template(): # Pull Resume from Google Drive as string
+def scrape_template(drive_service): # Pull Resume from Google Drive as string
     template_id = config["base_template_id"]
     template_text = drive_service.files().export(
         fileId=template_id,
@@ -193,7 +201,7 @@ def send_prompt(prompt): # Send & Receive
         return None
 # Add to the send_prompt function a retry loop in case of receiving a 503 error from Gemini
 
-def create_tailored_doc(record_id, company, doc_heading, new_intro, skills): # Create new google doc from template and save URL
+def create_tailored_doc(drive_service, docs_service, record_id, company, doc_heading, new_intro, skills): # Create new google doc from template and save URL
     # Copy the template Doc
     template_id = config["tagged_template_id"]
     response = drive_service.files().copy( # command to copy a google doc
@@ -270,9 +278,9 @@ def forge_doc():
     logger.debug("Signature verified")
 
     creds = get_credentials()
-    drive_service = build("drive", "v3", credentials=creds)
-    docs_service = build("docs", "v1", credentials=creds)
-    
+    drive_service = get_drive_service()
+    docs_service = get_docs_service()
+
     incoming_data = request.json
     if not incoming_data:
         return jsonify({"status": "error", "message": "No data provided"}), 400
@@ -307,7 +315,7 @@ def forge_doc():
         return jsonify({"status": "error", "message": "AI call failed"}), 400
     new_intro, keyword_list, missing_keywords, skills = result # These values will be sent to Notion
     
-    result = create_tailored_doc(record_id, company, doc_heading, new_intro, skills)
+    result = create_tailored_doc(drive_service, docs_service, record_id, company, doc_heading, new_intro, skills)
     if result is None:
         return jsonify({"status": "error", "message": "Failed to create tailored document"}), 400
     tailored_doc_url = result
