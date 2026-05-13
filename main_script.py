@@ -38,20 +38,21 @@ my_name = config["my_name"]
 # --- Google OAuth 2.0 ---
 SCOPES = ["https://www.googleapis.com/auth/drive", "https://www.googleapis.com/auth/documents"]
 
-creds = None
-if os.path.exists("token.json"):
-    creds = Credentials.from_authorized_user_file("token.json", SCOPES)
-if not creds or not creds.valid:
-    if creds and creds.expired and creds.refresh_token:
-        creds.refresh(Request())
-        with open("token.json", "w") as f:
-            f.write(creds.to_json())
-
-    else:
-        flow = InstalledAppFlow.from_client_secrets_file("credentials.json", SCOPES)
-        creds = flow.run_local_server(port=0, access_type="offline", prompt="consent")
-        with open("token.json", "w") as f:
-            f.write(creds.to_json())
+def get_credentials():
+    creds = None
+    if os.path.exists("token.json"):
+        creds = Credentials.from_authorized_user_file("token.json", SCOPES)
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+            with open("token.json", "w") as token:
+                token.write(creds.to_json())
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file("credentials.json", SCOPES)
+            creds = flow.run_local_server(port=0, access_type="offline", prompt="consent")
+            with open("token.json", "w") as token:
+                token.write(creds.to_json())
+    return creds
 
 drive_service = build("drive", "v3", credentials=creds)
 docs_service = build("docs", "v1", credentials=creds)
@@ -247,7 +248,7 @@ def send_payload(page_id, payload): # Push API call to Notion
         "Authorization": f"Bearer {database_api_key}",
         "Content-Type": "application/json"
     }
-    print("Sending PATCH request")
+    logger.info("Sending PATCH request")
     response = requests.patch(url, json=payload, headers=headers) # Returns an updated JSON for the page
     logger.debug("Notion PATCH Request [%s]: %s", response.status_code, response.text)
     response.raise_for_status()
@@ -258,7 +259,6 @@ def send_payload(page_id, payload): # Push API call to Notion
 # --- Main Webhook ---
 @app.route('/api/v1/doc/forge', methods=['POST'])
 def forge_doc():
-    print("Post Request received!")
     """
     # Notion first sends a verification code. This block of code is to capture it in the Render Log so we can save it
     data = request.get_json()
@@ -270,8 +270,9 @@ def forge_doc():
     if not verify_notion_signature(request):
         logger.error("Error: Invalid signature")
         return jsonify({"status": "error", "message": "Unauthorized request"}), 401
-
     logger.debug("Signature verified")
+
+    creds = get_credentials()
     incoming_data = request.json
     if not incoming_data:
         return jsonify({"status": "error", "message": "No data provided"}), 400
