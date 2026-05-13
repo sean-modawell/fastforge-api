@@ -278,8 +278,8 @@ def forge_doc():
     logger.debug("Signature verified")
 
     creds = get_credentials()
-    drive_service = get_drive_service()
-    docs_service = get_docs_service()
+    drive_service = get_drive_service(creds)
+    docs_service = get_docs_service(creds)
 
     incoming_data = request.json
     if not incoming_data:
