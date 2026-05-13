@@ -54,9 +54,6 @@ def get_credentials():
                 token.write(creds.to_json())
     return creds
 
-drive_service = build("drive", "v3", credentials=creds)
-docs_service = build("docs", "v1", credentials=creds)
-
 # --- Initial Setup ---
 app = Flask(__name__)
 now = datetime.now()
@@ -273,6 +270,9 @@ def forge_doc():
     logger.debug("Signature verified")
 
     creds = get_credentials()
+    drive_service = build("drive", "v3", credentials=creds)
+    docs_service = build("docs", "v1", credentials=creds)
+    
     incoming_data = request.json
     if not incoming_data:
         return jsonify({"status": "error", "message": "No data provided"}), 400
