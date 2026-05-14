@@ -76,6 +76,9 @@ AI/LLM - ChatGPT, Gemini, Claude, Internal - I use Google Gemini Flash model
 
 ## Product Roadmap
 
+Upcoming features:
+1. Enhanced error handling
+
 [Back to Top](#table-of-contents)
 
 ---
