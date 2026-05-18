@@ -32,8 +32,6 @@ Project Status: This is a fully operational internal tool developed as a referen
 
 ## Overview
 
-Provide a 2-3 sentence summary of the project. Explain the motivation behind building it, focusing on the pain point it resolves for clients or internal teams (e.g., "Streamlines the creation of context-aware documentation to reduce onboarding time").
-
 [Back to Top](#table-of-contents)
 
 ## Use Cases
@@ -78,6 +76,8 @@ AI/LLM - ChatGPT, Gemini, Claude, Internal - I use Google Gemini Flash model
 
 Upcoming features:
 1. Enhanced error handling
+2. Switch to FastAPI
+3. Greater database support
 
 [Back to Top](#table-of-contents)
 
