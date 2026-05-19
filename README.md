@@ -75,9 +75,13 @@ AI/LLM - ChatGPT, Gemini, Claude, Internal - I use Google Gemini Flash model
 ## Product Roadmap
 
 Upcoming features:
-1. Enhanced error handling
-2. Switch to FastAPI
-3. Greater database support
+1. Enhanced HTTP error handling:
+    - Connection errors
+    - Timeouts
+    - 4xx errors
+    - 5xx errors
+3. Switch to FastAPI
+4. Greater database support
 
 [Back to Top](#table-of-contents)
 
