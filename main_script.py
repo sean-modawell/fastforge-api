@@ -24,10 +24,16 @@ logger = logging.getLogger(__name__)
 
 # --- Keys ---
 load_dotenv()
+'''
 database_api_key = os.getenv("notion_local_api_key")
 notion_verification_token = os.getenv("notion_verification_token")
 gemini_api_key = os.getenv("gemini_local_api_key")
 my_client_password = os.getenv("my_local_client_password")
+'''
+database_api_key = os.environ.get("notion_local_api_key")
+notion_verification_token = os.environ.get("notion_verification_token")
+gemini_api_key = os.environ.get("gemini_local_api_key")
+my_client_password = os.environ.get("my_local_client_password")
 
 # --- Configuration File ---
 with open("config.json", "r") as f:
@@ -39,19 +45,15 @@ my_name = config["my_name"]
 SCOPES = ["https://www.googleapis.com/auth/drive", "https://www.googleapis.com/auth/documents"]
 
 def get_credentials():
-    creds = None
-    if os.path.exists("token.json"):
-        creds = Credentials.from_authorized_user_file("token.json", SCOPES)
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-            with open("token.json", "w") as token:
-                token.write(creds.to_json())
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file("credentials.json", SCOPES)
-            creds = flow.run_local_server(port=0, access_type="offline", prompt="consent")
-            with open("token.json", "w") as token:
-                token.write(creds.to_json())
+    creds = Credentials(
+        token=None,
+        refresh_token=os.environ["GOOGLE_REFRESH_TOKEN"],
+        token_uri="https://oauth2.googleapis.com/token",
+        client_id=os.environ["GOOGLE_CLIENT_ID"],
+        client_secret=os.environ["GOOGLE_CLIENT_SECRET"],
+        scopes=SCOPES,
+    )
+    creds.refresh(Request())
     return creds
 
 def get_drive_service(creds):
