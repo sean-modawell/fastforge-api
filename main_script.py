@@ -23,7 +23,9 @@ logging.basicConfig(level=logging.DEBUG) # DEBUG > INFO > WARNING > ERROR > CRIT
 logger = logging.getLogger(__name__)
 
 # --- Keys ---
-load_dotenv()
+load_dotenv("/etc/secrets/.env") # Path for Render
+load_dotenv() # Local Path
+logging.info(f"Refresh token loaded: {bool(os.environ.get('GOOGLE_REFRESH_TOKEN'))}") # Most common point of failure. This makes sure the OAuth workflow functions
 '''
 database_api_key = os.getenv("notion_local_api_key")
 notion_verification_token = os.getenv("notion_verification_token")
