@@ -142,13 +142,13 @@ def test_request_fields_real():
 def test_create_prompt_full():
     test_content = "practice content"
     test_template_text = "practice template text"
-    return_prompt = create_prompt(test_content, test_template_text, prompt_file="tests/test_prompt.txt")
+    return_prompt = create_prompt(test_content, test_template_text, prompt_file="tests/mock_prompt.txt")
     assert return_prompt == "Content: practice content Template: practice template text"
 
 def test_create_prompt_missing_fields():
     test_content = "practice content"
     test_template_text =  ""
-    return_prompt = create_prompt(test_content, test_template_text, prompt_file="tests/test_prompt.txt")
+    return_prompt = create_prompt(test_content, test_template_text, prompt_file="tests/mock_prompt.txt")
     assert return_prompt == "Content: practice content Template: "
 
 
@@ -181,13 +181,13 @@ def test_send_prompt_mock_success():
 
 @pytest.mark.skip(reason="Real API call - run manually only") # Has passed
 def test_send_prompt_real():
-    test_prompt = (
+    mock_prompt = (
         "Respond ONLY with a valid JSON object containing exactly these keys: "
         "new_intro (string), keyword_list (array of strings), "
         "missing_keywords (array of strings), skills (string). "
         "Use placeholder values."
     )
-    result = send_prompt(test_prompt)
+    result = send_prompt(mock_prompt)
     assert result is not None
     new_intro, keyword_list, missing_keywords, skills = result
     assert isinstance(new_intro, str)
