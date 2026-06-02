@@ -1,0 +1,41 @@
+# Exported from Render on 2026-06-02T03:48:03Z
+version: "1"
+projects:
+- name: FastForgeAPI
+  environments:
+  - name: Production
+    services:
+    - type: web
+      name: fastforge_api
+      runtime: python
+      repo: https://github.com/Sean-DM2022/fastforge_api
+      plan: free
+      envVars:
+      - key: GOOGLE_REFRESH_TOKEN
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: notion_verification_token
+        sync: false
+      - key: my_local_client_password
+        sync: false
+      - key: google_drive_api_key
+        sync: false
+      - key: gemini_local_api_key
+        sync: false
+      - key: notion_local_api_key
+        sync: false
+      - key: .env
+        sync: false
+      - key: config.json
+        sync: false
+      - key: credentials.json
+        sync: false
+      - key: prompt.txt
+        sync: false
+      region: oregon
+      buildCommand: pip install -r requirements.txt
+      startCommand: gunicorn main_sync:app --timeout 120
+      autoDeployTrigger: commit
