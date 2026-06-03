@@ -1,10 +1,12 @@
 # FastForge API
 
-A Python-based microservice utilizing LLM, webhooks, and databases to dynamically create context-aware documents.
+An internal automation engine that generates context-aware documents to reduce client Time-to-Value, eliminate manual reporting errors, and scale operations without adding headcount.
 
 ---
 
-Project Status: This is a fully operational internal tool developed as a reference architecture for automating documentation workflows using Flask/FastAPI and LLM integrations. While primarily a portfolio piece and for personal utility, the architecture is designed with B2B integration principles in mind.
+**Project Status**: This is a fully operational internal tool developed as a reference architecture for automating documentation workflows using Flask/FastAPI and LLM integrations. While primarily a portfolio piece and for personal utility, the architecture is designed with B2B integration principles in mind, and can be adapted to internal tools and workflows. 
+
+**Current Version**: v1.1
 
 ---
 
@@ -32,33 +34,50 @@ Project Status: This is a fully operational internal tool developed as a referen
 
 ## Overview
 
+FastForge works as follows:
+1. Determine Trigger
+    - Workflow is triggered by an "event". This could be a new client added in your CRM, an updated status, a scheduled QBR, new prospect, really anything. 
+2. Gather context
+    - FastForge fetches all content related to the workflow from your database (additional sources may be connected as well)
+3. Pass to GenAI
+    - A prompt is sent to AI for deep analysis, complete with instructions, requirements, templates, and context.
+4. Process Response
+    - The response is processed and saved.
+5. Forge documentation
+    - The AI's recommendations are injected into a template to forge a new document.
+6. Update database and stakeholders
+    - Your records are updated with a link to the new document, the AI response for reference, and any additional information you would like.
+    - Notifications can be sent to stakeholders for review.
+
 [Back to Top](#table-of-contents)
 
-## Use Cases
+---
 
-1. Custom Onboarding Guides/Runbooks
-2. Financial Audit Briefs
-3. Incident Post-Mortems
-4. Dynamic SLA's
+## Use Cases & Business Solutions
 
-FastForge API can be used in conjuction with a CRM:
-When a new client is entered into the system, the API is triggered to produce documents customized for that client. These can include:
-- Onboarding instructions
-- Client specific keys & passwords
-- Personalized guides
-- Success Plan
+FastForge can simultaneously reduce bottlenecks across various departments
 
-This works for retention as well. Imagine a client's heathscore KPI drops. This can trigger a webhook to this script.
-- The script takes all of the client's data and sends it to your LLM.
-- The LLM, utilizing a template, creates an action plan or account recovery plan
-- The script then executes the action plan, assigning tasks/tickets to team members, sending emails, guides, documents, informing stakeholders, and much more.
+| Department | Use Case | Details |
+| --- | --- | --- |
+| **HR & Management** | Talent Development Dossiers | Sidesteps the negative "PIP" vibe. It automatically compiles scattered performance metrics, peer feedback, and KPIs into actionable growth plans, reducing managerial bias and prep time. |
+| **Customer Success** | Lifecycle Artifact Automation | Generating dynamic Quarterly Business Review (QBR) decks, personalized implementation playbooks, and automated health-check summaries. |
+| **Engineering** | Stakeholder-Ready RCAs | Instantly formatting highly technical incident data into standardized Root Cause Analysis (RCA) documents that non-technical account managers can actually hand to clients. |
+| **Project Management** | Automated Statements of Work (SOWs) | Moving beyond just creating tasks to generating the actual project briefs, scope documents, and integration timelines based on initial client requirements. |
+| **Executive / Board** | Unified Executive Briefs | Pulling high-level metrics across departments into a single, digestible packet before major strategy meetings. |
+| **Sales & RevOps** | Custom Pitch Decks & Proposals | Pulling prospect data from a CRM to automatically generate highly tailored proposal PDFs, pricing matrices, or ROI business cases for the sales team. |
+| **Compliance & Legal** | Audit Trails | Automatically generating compliance reports or filling out tedious vendor security questionnaires based on a centralized database of standard company answers. |
+| **FinTech / Billing** | Custom Reconciliation Reports | Beyond standard audits, generating customized end-of-month billing breakdowns for enterprise clients who require specific data formatting before they pay their invoices. |
 
-In my personal workflow, I have the LLM create the plan and update the status to "Review". There, I can look over the plan, make any adjustments as needed, and then execute it.
+
+Due to the custom API and async cababilities, multiple endpoints can be created to handle as many workflows as you like!
+
+
+In my personal workflow, I update the record to "Review". There, I can look over the work, make any adjustments as needed, and then execute it.
 
 Components:
 Database "Source of Truth" - CRM(Salesforce, HubSpot), ERP, HCM/HRIS, or SQL based - I use Notion
 Server - Where the script lives. Can be local or Cloud - I use Render
-Framework - FastAPI - Currently using Flask with Gunicorn. Plans to upgrade to FastAPI
+Framework - FastAPI or Flask - Flask for small scale
 Cloud DocHub - Google Drive, OneDrive, Sharepoint, Dropbox - I use Google Drive
 AI/LLM - ChatGPT, Gemini, Claude, Internal - I use Google Gemini Flash model
 
@@ -75,13 +94,10 @@ AI/LLM - ChatGPT, Gemini, Claude, Internal - I use Google Gemini Flash model
 ## Product Roadmap
 
 Upcoming features:
-1. Enhanced HTTP error handling:
-    - Connection errors
-    - Timeouts
-    - 4xx errors
-    - 5xx errors
-3. Switch to FastAPI
-4. Greater database support
+1. Support for per second and per minute rate limits
+    - Support will not be added for daily rate limits in this feature, though support for multiple accounts is being considered for later
+2. Support for additional databases
+3. Support for additianal server providers (not just render)
 
 [Back to Top](#table-of-contents)
 
@@ -89,21 +105,22 @@ Upcoming features:
 
 ## Limitations & Future Scope
 
-The output of this workflow is mainly limited by AI capability. These limitations can mostly be overcome by the following:
+The output of your workflow is mainly limited by AI capability. These limitations can mostly be overcome by the following:
 
 - Prompt Design:
 The quality of your prompt determines your final output. Vague or incomplete prompts lead to unhelpful output, which defeats the purpose of this automation. Much can be acheived by AI today with the proper prompt.
 
 - Custom AI/LLM:
-Creating your own AI model, utilizing machine learning to train it on your own internal data, giving it read access to your database, will get you the best output. Doing so is easier than ever. [Hugging Face](https://huggingface.co/) has a wealth of base models at your disposal, completely free. Find the one that best fits your use case, download it, connect it to your internal data (read-access-only), and start training.
+Creating your own AI model, utilizing machine learning to train it on your own internal data, giving it read access to your database/knowledgebase, will get you the best output. Doing so is easier than ever. [Hugging Face](https://huggingface.co/) has a wealth of base models at your disposal, completely free. Find the one that best fits your use case, download it, connect it to your internal data (read-access-only), and start training.
 
 
 ### What’s Configurable (Without Touching Code)
 
 **You can adjust:**
 
-- Notion database field names
 - The prompt sent to Gemini
+- **Sync** vs **Async** workflow
+
 
 **Currently not configurable:**
 
@@ -123,14 +140,14 @@ Creating your own AI model, utilizing machine learning to train it on your own i
 
 ### Tools Used
 
-|Purpose             |Tool                      |Why                                     |
-|--------------------|--------------------------|----------------------------------------|
-|Database            |Notion                    |Free API, great for project management  |
-|Browser clipping    |Save to Notion (extension)|Easy way to add jobs to the workflow    |
-|Doc storage         |Google Drive / Google Docs|Free API, dynamic and easy to update    |
-|AI suggestions      |Google Gemini (Flash)     |Free API tier; ChatGPT no longer has one|
-|Server hosting      |Render                    |Free tier for personal apps             |
-|Web framework       |Flask                     |Lightweight; supports local hosting too |
+|Component                 |Tool                         |Why                                     |
+|--------------------------|-----------------------------|----------------------------------------|
+|Database (Source of Truth)|Notion                       |Free API, great for project management  |
+|Browser Clipping          |Save to Notion (extension)   |Easy way to add jobs to the workflow    |
+|Doc Storage               |Google Drive / Google Docs   |Free API, dynamic, and easy to update   |
+|GenAI Model               |Google Gemini (Flash)        |Free API tier; ChatGPT no longer has one|
+|Server hosting            |[Render](https://render.com/)|Free tier for personal apps             |
+|Web framework             |Flask / FastAPI              |Lightweight and supports local hosting  |
 
 ### How it Works
 
@@ -324,7 +341,7 @@ If you do not have a business account or paid account, have no fear. This can be
 
 #### rich_text objects
 
-rich_text is a LIST of dictionaries. This is to support multiple formats. Where a new format begins, a new block/dictionary is added to the list.
+For those of you unfamiliar with rich_text objects, the entire paragraph is a LIST of dictionaries. This is to support multiple formats within the same string. Where a new format begins, a new block/dictionary is added to the list.
 
 ```json
 "rich_text": [
