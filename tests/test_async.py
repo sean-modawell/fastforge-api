@@ -1,5 +1,5 @@
 
-from core.helpers import extract_json_data, create_payload
+from core.helpers import extract_json_data
 from main_async import app  # FastAPI client
 from fastapi.testclient import TestClient
 

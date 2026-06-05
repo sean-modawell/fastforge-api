@@ -4,50 +4,21 @@
 # --- Modules & Packages ---
 from flask import Flask, request, jsonify
 import os
-from dotenv import load_dotenv
-from datetime import datetime
 import json
 from google import genai
 from google.genai import types
-from googleapiclient.discovery import build
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 import requests
 import hmac
 import hashlib
-import logging
+
 
 # --- Helper Functions ---
-from core.helpers import extract_json_data, scrape_template, create_prompt, send_prompt, create_tailored_doc, create_payload
-from core.config import get_credentials, get_drive_service, get_docs_service
-
-# --- Logging Settings ---
-logging.basicConfig(level=logging.DEBUG) # DEBUG > INFO > WARNING > ERROR > CRITICAL
-logger = logging.getLogger(__name__)
-
-# --- Keys ---
-load_dotenv("/etc/secrets/.env") # Path for Render
-load_dotenv("setup/.env") # Local Path
-logging.info(f"Refresh token loaded: {bool(os.environ.get('GOOGLE_REFRESH_TOKEN'))}") # Most common point of failure. This makes sure the OAuth workflow functions
-
-database_api_key = os.environ.get("notion_local_api_key")
-notion_verification_token = os.environ.get("notion_verification_token")
-gemini_api_key = os.environ.get("gemini_local_api_key")
-my_client_password = os.environ.get("my_local_client_password")
-
-# --- Configuration File ---
-with open("config.json", "r") as f:
-    config = json.load(f)
-
-my_name = config["my_name"]
-
+from core.helpers import extract_json_data, scrape_template, create_prompt, send_prompt, create_tailored_doc, create_payload, logger
+from core.config import get_credentials, get_drive_service, get_docs_service, database_api_key, notion_verification_token
 
 # --- Initial Setup ---
 app = Flask(__name__)
-now = datetime.now()
-current_month = now.month
-current_year = now.year
 
 # --- Helper Functions ---
 def verify_notion_signature(request):
@@ -58,6 +29,10 @@ def verify_notion_signature(request):
     except json.JSONDecodeError:
         logger.error("Post request is not valid JSON")
         return None
+
+    if not weave:  # header missing entirely
+        logger.warning("X-Notion-Signature header missing")
+        return False
 
     yarn = 'sha256=' + hmac.new(
         notion_verification_token.encode(),

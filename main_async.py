@@ -5,49 +5,20 @@
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
 import os
-from dotenv import load_dotenv
-from datetime import datetime
 import json
 from google import genai
 from google.genai import types
-from googleapiclient.discovery import build
-from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
-import httpx
+import httpx2
 import hmac
 import hashlib
-import logging
 
 # --- Helper Functions ---
-from core.helpers import extract_json_data, scrape_template, create_prompt, send_prompt, create_tailored_doc, create_payload
+from core.helpers import extract_json_data, scrape_template, create_prompt, send_prompt, create_tailored_doc, create_payload, logger
 from core.config import get_credentials, get_drive_service, get_docs_service
-
-# --- Logging Settings ---
-logging.basicConfig(level=logging.DEBUG) # DEBUG > INFO > WARNING > ERROR > CRITICAL
-logger = logging.getLogger(__name__)
-
-# --- Keys ---
-load_dotenv("/etc/secrets/.env") # Path for Render
-load_dotenv("setup/.env") # Local Path
-logging.info(f"Refresh token loaded: {bool(os.environ.get('GOOGLE_REFRESH_TOKEN'))}") # Most common point of failure. This makes sure the OAuth workflow functions
-
-database_api_key = os.environ.get("notion_local_api_key")
-notion_verification_token = os.environ.get("notion_verification_token")
-gemini_api_key = os.environ.get("gemini_local_api_key")
-my_client_password = os.environ.get("my_local_client_password")
-
-# --- Configuration File ---
-with open("config.json", "r") as f:
-    config = json.load(f)
-
-my_name = config["my_name"]
-
 
 # --- Initial Setup ---
 app = FastAPI()
-now = datetime.now()
-current_month = now.month
-current_year = now.year
 
 # --- Unique Async Functions ---
 async def verify_notion_signature(request):
@@ -58,6 +29,10 @@ async def verify_notion_signature(request):
     except json.JSONDecodeError:
         logger.error("Post request is not valid JSON")
         return None
+        
+    if not weave:  # header missing entirely
+        logger.warning("X-Notion-Signature header missing")
+        return False
 
     yarn = 'sha256=' + hmac.new(
         notion_verification_token.encode(),
@@ -73,7 +48,7 @@ async def request_content(page_id): # Request page content
         "Authorization": f"Bearer {database_api_key}"
     }
     logger.debug("Requesting page contents...")
-    async with httpx.AsyncClient() as client:
+    async with httpx2.AsyncClient() as client:
         try:
             response = await client.get(url, headers=headers, timeout=10)
             logger.debug(f"Notion [{response.status_code}]: {response.text}")
@@ -89,11 +64,11 @@ async def request_content(page_id): # Request page content
                 logger.error("Response is not valid JSON")
                 return None
                 
-        except httpx.HTTPStatusError as e:
+        except httpx2.HTTPStatusError as e:
             logger.error(f"HTTP error: {e}")
             return None
 
-        except httpx.RequestError as e:
+        except httpx2.RequestError as e:
             logger.error(f"Request failed: {e}")
             return None
 
@@ -105,7 +80,7 @@ async def request_fields(page_id): # Request and save additional fields
         "Authorization": f"Bearer {database_api_key}"
     }
     logger.info("Sending GET request for additional fields...")
-    async with httpx.AsyncClient() as client:
+    async with httpx2.AsyncClient() as client:
         try:
             response = await client.get(url, headers=headers, timeout=10)
             logger.debug(f"Notion GET Request [{response.status_code}]: {response.text}")
@@ -123,11 +98,11 @@ async def request_fields(page_id): # Request and save additional fields
                 logger.error("Response is not valid JSON")
                 return None
 
-        except httpx.HTTPStatusError as e:
+        except httpx2.HTTPStatusError as e:
             logger.error(f"HTTP error: {e}")
             return None
 
-        except httpx.RequestError as e:
+        except httpx2.RequestError as e:
             logger.error(f"Request failed: {e}")
             return None
 
@@ -140,7 +115,7 @@ async def send_payload(page_id, payload): # Push API call to Notion
         "Content-Type": "application/json"
     }
     logger.info("Sending PATCH request")
-    async with httpx.AsyncClient() as client:
+    async with httpx2.AsyncClient() as client:
         response = await client.patch(url, json=payload, headers=headers) # Returns an updated JSON for the page
         logger.debug(f"Notion PATCH Request [{response.status_code}]: {response.text}")
         response.raise_for_status()
@@ -149,9 +124,9 @@ async def send_payload(page_id, payload): # Push API call to Notion
 
 
 # --- Main Webhook ---
-@app.route('/api/v1/doc/forge')
+@app.post('/api/v1/doc/forge')
 async def forge_doc():
-    if not await verify_notion_signature(request):
+    if not await verify_notion_signature(Request):
         logger.error("Error: Invalid signature")
         raise HTTPException(status_code=401, detail="Unauthorized request")
     logger.debug("Signature verified")

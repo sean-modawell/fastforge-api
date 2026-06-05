@@ -1,7 +1,23 @@
+## Intro
 
-from core.config import get_credentials, get_drive_service, get_docs_service
+# --- Modules & Packages ---
+from core.config import get_credentials, get_drive_service, get_docs_service, gemini_api_key
+import logging
+from datetime import datetime
+import json
 
+# --- Logging Settings ---
+logging.basicConfig(level=logging.DEBUG) # DEBUG > INFO > WARNING > ERROR > CRITICAL
+logger = logging.getLogger(__name__)
 
+# --- Current Date ---
+now = datetime.now()
+current_month = now.month
+current_year = now.year
+
+# --- Configuration File ---
+with open("setup/config.json", "r") as f:
+    config = json.load(f)
 
 
 def extract_json_data(incoming_data): # Process the API call from Notion and pull the PAGE_ID
@@ -69,7 +85,7 @@ def create_tailored_doc(drive_service, docs_service, record_id, company, doc_hea
     response = drive_service.files().copy( # command to copy a google doc
         fileId=template_id, # selects the proper file
         body={
-            "name": f"ID-{record_id} - {company} ({current_month}/{current_year})",
+            "name": f"ID-{record_id} - {company} ({current_month}-{current_year})",
             "parents": [config["output_folder"]]
         },
         supportsAllDrives=True
