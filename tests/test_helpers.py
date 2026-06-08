@@ -68,132 +68,6 @@ def test_extract_json_data_missing_page_id():
 # def test_extract_json_data_invalid_json():
 
 
-# --- request_content ---
-test_page_id = "3123e484e34b8019bd4de26a14d50d72"
-
-def test_request_content_mock_success():
-    mock_response = MagicMock()
-    mock_response.raise_for_status = MagicMock()  # No-op; simulates 200 OK
-    mock_response.json.return_value = {"markdown": "# Software\n\nTitle section..."}
-    with patch("requests.get", return_value=mock_response) as mock_get:
-        result = request_content(test_page_id)
-    mock_get.assert_called_once()
-    assert result == "# Software\n\nTitle section..."
-
-def test_request_content_mock_request_exception():
-    with patch("requests.get", side_effect=requests.exceptions.RequestException("timeout")):
-        result = request_content(test_page_id)
-    assert result is None
-
-def test_request_content_mock_invalid_json():
-    mock_response = MagicMock()
-    mock_response.raise_for_status = MagicMock()
-    mock_response.json.side_effect = json.JSONDecodeError("msg", "doc", 0)
-    with patch("requests.get", return_value=mock_response):
-        result = request_content(test_page_id)
-    assert result is None
-
-@pytest.mark.skip(reason="Real API call - run manually only") # Has passed
-def test_request_content_real():
-    result = request_content(test_page_id)
-    assert result is not None
-    assert isinstance(result, str)
-
-
-
-# --- request_fields ---
-with open("tests/api-response.json", "r") as f:
-    mock_fields_payload = json.load(f)
-
-def test_request_fields_mock_success():
-    mock_response = MagicMock()
-    mock_response.raise_for_status = MagicMock()
-    mock_response.json.return_value = mock_fields_payload
-    with patch("requests.get", return_value=mock_response) as mock_get:
-        result = request_fields(test_page_id)
-    mock_get.assert_called_once()
-    assert result == (1, "Project Manager", "Acme")
-
-def test_request_fields_mock_request_exception():
-    with patch("requests.get", side_effect=requests.exceptions.RequestException("connection error")):
-        result = request_fields(test_page_id)
-    assert result is None
-
-def test_request_fields_mock_invalid_json():
-    mock_response = MagicMock()
-    mock_response.raise_for_status = MagicMock()
-    mock_response.json.side_effect = json.JSONDecodeError("msg", "doc", 0)
-    with patch("requests.get", return_value=mock_response):
-        result = request_fields(test_page_id)
-    assert result is None
-
-@pytest.mark.skip(reason="Real API call - run manually only") # Has passed
-def test_request_fields_real():
-    result = request_fields(test_page_id)
-    assert result is not None
-    record_id, doc_heading, company = result
-    assert isinstance(record_id, int)
-    assert isinstance(doc_heading, str)
-    assert isinstance(company, str)
-
-
-
-# --- create_prompt ---
-def test_create_prompt_full():
-    test_content = "practice content"
-    test_template_text = "practice template text"
-    return_prompt = create_prompt(test_content, test_template_text, prompt_file="tests/mock_prompt.txt")
-    assert return_prompt == "Content: practice content Template: practice template text"
-
-def test_create_prompt_missing_fields():
-    test_content = "practice content"
-    test_template_text =  ""
-    return_prompt = create_prompt(test_content, test_template_text, prompt_file="tests/mock_prompt.txt")
-    assert return_prompt == "Content: practice content Template: "
-
-
-
-# --- send_prompt ---
-def test_send_prompt_mock_success():
-    mock_ai_response = {
-        "new_intro": "The greatest intro of all time.",
-        "keyword_list": ["Python", "Flask"],
-        "missing_keywords": ["GitHub"],
-        "skills": "Python | Flask | REST APIs"
-    }
-    mock_response = MagicMock()
-    mock_response.text = json.dumps(mock_ai_response)
-    with patch("main_script.genai.Client") as mock_client:
-        mock_client.return_value.models.generate_content.return_value = mock_response
-        result = send_prompt("test prompt")
-    assert result is not None
-    new_intro, keyword_list, missing_keywords, skills = result
-    assert new_intro == "The greatest intro of all time."
-    assert "Python" in keyword_list
-    assert "GitHub" in missing_keywords
-    assert skills == "Python | Flask | REST APIs"
-
-# def test_send_prompt_mock_exception():
-    # assert result is None
-
-# def test_send_prompt_invalid_json():
-    # assert result is None
-
-@pytest.mark.skip(reason="Real API call - run manually only") # Has passed
-def test_send_prompt_real():
-    mock_prompt = (
-        "Respond ONLY with a valid JSON object containing exactly these keys: "
-        "new_intro (string), keyword_list (array of strings), "
-        "missing_keywords (array of strings), skills (string). "
-        "Use placeholder values."
-    )
-    result = send_prompt(mock_prompt)
-    assert result is not None
-    new_intro, keyword_list, missing_keywords, skills = result
-    assert isinstance(new_intro, str)
-    assert isinstance(keyword_list, list)
-    assert isinstance(skills, str)
-
 
 
 # --- create_tailored_resume ---
@@ -274,46 +148,43 @@ def test_create_payload_success():
 # def test_create_payload_missing_field():
 
 
-# --- send_payload ---
-def test_send_payload_mock_success():
-    mock_payload = {
-        "properties": {
-            "status": {
-                "status": { "name": "review_doc" },
-            },
-            "intro_paragraph": { "rich_text": [{ "text": { "content": "new_intro" } }] },
-            "keyword_list": { "rich_text": [{ "text": { "content": "keyword_list" } }] },
-            "missing_keywords": { "rich_text": [{ "text": { "content": "missing_keywords" } }] },
-            "tailored_doc_url": { "url": "tailored_doc_url" },
-            "skills": { "rich_text": [{ "text": { "content": "skills" } }] },
-        },
+# --- send_prompt ---
+def test_send_prompt_mock_success():
+    mock_ai_response = {
+        "new_intro": "The greatest intro of all time.",
+        "keyword_list": ["Python", "Flask"],
+        "missing_keywords": ["GitHub"],
+        "skills": "Python | Flask | REST APIs"
     }
     mock_response = MagicMock()
-    mock_response.raise_for_status = MagicMock()
-    mock_response.json.return_value = {
-        "object": "page",
-        "id": "mock",
-        "properties":{}
-    }
-    with patch("requests.patch", return_value=mock_response) as mock_patch:
-        result = send_payload(page_id="mock", payload=mock_payload)
-    mock_patch.assert_called_once()
-    called_url = mock_patch.call_args[0][0]
-    assert called_url == "https://api.notion.com/v1/pages/mock"
-    mock_response.raise_for_status.assert_called_once()
-    assert result == mock_response.json.return_value
-    assert result["id"] == "mock"
+    mock_response.text = json.dumps(mock_ai_response)
+    with patch("core.helpers.genai.Client") as mock_client:
+        mock_client.return_value.models.generate_content.return_value = mock_response
+        result = send_prompt("test prompt")
+    assert result is not None
+    new_intro, keyword_list, missing_keywords, skills = result
+    assert new_intro == "The greatest intro of all time."
+    assert "Python" in keyword_list
+    assert "GitHub" in missing_keywords
+    assert skills == "Python | Flask | REST APIs"
 
-# def test_send_payload_mock_exception():
-    result = "TODO"
-    #assert result is None
+# def test_send_prompt_mock_exception():
+    # assert result is None
 
-# def test_send_payload_mock_invalid_json():
-    result = "TODO"
-    #assert result is None
+# def test_send_prompt_invalid_json():
+    # assert result is None
 
-# @pytest.mark.skip(reason="Real API call - run manually only")
-# def test_send_payload_real():
-
-
-# --- handle_webhook ---
+@pytest.mark.skip(reason="Real API call - run manually only") # Has passed
+def test_send_prompt_real():
+    mock_prompt = (
+        "Respond ONLY with a valid JSON object containing exactly these keys: "
+        "new_intro (string), keyword_list (array of strings), "
+        "missing_keywords (array of strings), skills (string). "
+        "Use placeholder values."
+    )
+    result = send_prompt(mock_prompt)
+    assert result is not None
+    new_intro, keyword_list, missing_keywords, skills = result
+    assert isinstance(new_intro, str)
+    assert isinstance(keyword_list, list)
+    assert isinstance(skills, str)

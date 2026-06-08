@@ -5,6 +5,8 @@ from core.config import get_credentials, get_drive_service, get_docs_service, ge
 import logging
 from datetime import datetime
 import json
+from google import genai
+from google.genai import types
 
 # --- Logging Settings ---
 logging.basicConfig(level=logging.DEBUG) # DEBUG > INFO > WARNING > ERROR > CRITICAL

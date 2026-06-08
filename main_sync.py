@@ -5,9 +5,6 @@
 from flask import Flask, request, jsonify
 import os
 import json
-from google import genai
-from google.genai import types
-from google.auth.transport.requests import Request
 import requests
 import hmac
 import hashlib
