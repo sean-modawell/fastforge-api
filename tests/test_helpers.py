@@ -67,8 +67,21 @@ def test_extract_json_data_missing_page_id():
 
 # def test_extract_json_data_invalid_json():
 
+# --- create_prompt ---
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+TEST_PROMPT_PATH = os.path.join(BASE_DIR, "mock_prompt.txt")
 
+def test_create_prompt_full():
+    test_content = "practice content"
+    test_template_text = "practice template text"
+    return_prompt = create_prompt(test_content, test_template_text, prompt_file=TEST_PROMPT_PATH)
+    assert return_prompt == "Content: practice content Template: practice template text"
 
+def test_create_prompt_missing_fields():
+    test_content = "practice content"
+    test_template_text =  ""
+    return_prompt = create_prompt(test_content, test_template_text, prompt_file=TEST_PROMPT_PATH)
+    assert return_prompt == "Content: practice content Template: "
 
 # --- create_tailored_resume ---
 def test_create_tailored_doc_mock_success():
