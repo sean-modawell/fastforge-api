@@ -20,8 +20,12 @@ current_year = now.year
 
 # --- Absolute Directory Path ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-CONFIG_PATH = os.path.join(BASE_DIR, "..", "setup", "config.json")
-PROMPT_PATH = os.path.join(BASE_DIR, "..", "setup", "prompt.txt")
+CONFIG_PATH = "/etc/secrets/config.json" # Render
+if not os.path.exists(CONFIG_PATH):
+    CONFIG_PATH = os.path.join(BASE_DIR, "..", "setup", "config.json") # Local
+PROMPT_PATH = "/etc/secrets/prompt.txt" # Render
+if not os.path.exists(PROMPT_PATH):
+    PROMPT_PATH = os.path.join(BASE_DIR, "..", "setup", "prompt.txt")  # Local
 
 with open(CONFIG_PATH, "r") as f:
     config = json.load(f)
