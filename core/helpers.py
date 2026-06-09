@@ -7,6 +7,7 @@ from datetime import datetime
 import json
 from google import genai
 from google.genai import types
+import os
 
 # --- Logging Settings ---
 logging.basicConfig(level=logging.DEBUG) # DEBUG > INFO > WARNING > ERROR > CRITICAL
@@ -17,11 +18,15 @@ now = datetime.now()
 current_month = now.month
 current_year = now.year
 
-# --- Configuration File ---
-with open("setup/config.json", "r") as f:
+# --- Absolute Directory Path ---
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CONFIG_PATH = os.path.join(BASE_DIR, "..", "setup", "config.json")
+PROMPT_PATH = os.path.join(BASE_DIR, "..", "setup", "prompt.txt")
+
+with open(CONFIG_PATH, "r") as f:
     config = json.load(f)
 
-
+# --- Helper Functions ---
 def extract_json_data(incoming_data): # Process the API call from Notion and pull the PAGE_ID
     logger.debug("Extracting data...")
     try:
@@ -41,7 +46,7 @@ def scrape_template(drive_service): # Pull Resume from Google Drive as string
     ).execute().decode("utf-8") # Google export() does not auto-decode/convert "text/plain". We need to convert it to a string with .decode()
     return template_text
 
-def create_prompt(page_content, template_text, prompt_file="prompt.txt"): # Call prompt.txt, insert current template TEXT and doc_content TEXT
+def create_prompt(page_content, template_text, prompt_file=PROMPT_PATH): # Call prompt.txt, insert current template TEXT and doc_content TEXT
     with open(prompt_file, "r") as f:
         prompt = f.read()
     prompt = prompt.replace("{{page_content}}", page_content)
