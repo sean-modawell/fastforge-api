@@ -141,12 +141,12 @@ async def forge_doc(request: Request):
         raise HTTPException(status_code=400, detail="Failed to parse data")
     page_id = result
 
-    result = request_content(page_id)
+    result = await request_content(page_id)
     if result is None:
         raise HTTPException(status_code=400, detail="Could not locate page_id")
     page_content = result
 
-    result = request_fields(page_id)
+    result = await request_fields(page_id)
     if result is None:
         raise HTTPException(status_code=400, detail="Could not pull additional fields")
     record_id, doc_heading, company = result
@@ -172,7 +172,7 @@ async def forge_doc(request: Request):
     tailored_doc_url = result
 
     payload = create_payload(new_intro, keyword_list, missing_keywords, tailored_doc_url, skills)
-    send_payload(page_id, payload)
+    await send_payload(page_id, payload)
     logger.info("Successfully sent PATCH request")
     logger.info("Workflow complete")
     return JSONResponse(content={"status": "success", "message": "POST request processed successfully"}, status_code=200)
