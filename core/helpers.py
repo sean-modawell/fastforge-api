@@ -74,11 +74,11 @@ def send_prompt(prompt): # Send & Receive
             ai_data = json.loads(response.text)
 
             new_intro = ai_data.get("new_intro", "")
-            keyword_list = ai_data.get("keyword_list", "")
-            missing_keywords = ai_data.get("missing_keywords", "")
-            skills = ai_data.get("skills", "")
+            term_analysis = ai_data.get("term_analysis", "")
+            gap_analysis = ai_data.get("gap_analysis", "")
+            highlights = ai_data.get("highlights", "")
             logger.info("Successfully parsed AI response!")
-            return new_intro, keyword_list, missing_keywords, skills
+            return new_intro, term_analysis, gap_analysis, highlights
 
         except json.JSONDecodeError as json_err:
             logger.error(f"Failed to parse AI response: {json_err}")
@@ -90,7 +90,7 @@ def send_prompt(prompt): # Send & Receive
         return None
 # Add to the send_prompt function a retry loop in case of receiving a 503 error from Gemini
 
-def create_tailored_doc(drive_service, docs_service, record_id, company, doc_heading, new_intro, skills): # Create new google doc from template and save URL
+def create_tailored_doc(drive_service, docs_service, record_id, company, doc_heading, new_intro, highlights): # Create new google doc from template and save URL
     # Copy the template Doc
     template_id = config["tagged_template_id"]
     response = drive_service.files().copy( # command to copy a google doc
@@ -109,7 +109,7 @@ def create_tailored_doc(drive_service, docs_service, record_id, company, doc_hea
         body={"requests": [
             {"replaceAllText": {"containsText": {"text": "{{doc_heading}}"}, "replaceText": doc_heading}},
             {"replaceAllText": {"containsText": {"text": "{{introduction_paragraph}}"}, "replaceText": new_intro}},
-            {"replaceAllText": {"containsText": {"text": "{{skills}}"}, "replaceText": skills}},
+            {"replaceAllText": {"containsText": {"text": "{{highlights}}"}, "replaceText": highlights}},
         ]}
     ).execute()
 
@@ -118,7 +118,7 @@ def create_tailored_doc(drive_service, docs_service, record_id, company, doc_hea
     logger.info(f"Tailored document created: {tailored_doc_url}")
     return tailored_doc_url
 
-def create_payload(new_intro, keyword_list, missing_keywords, tailored_doc_url, skills): # Prepare JSON payload for Notion
+def create_payload(new_intro, term_analysis, gap_analysis, tailored_doc_url, highlights): # Prepare JSON payload for Notion
     logger.debug("Constructing payload...")
     payload = {
         "properties": {
@@ -126,10 +126,10 @@ def create_payload(new_intro, keyword_list, missing_keywords, tailored_doc_url, 
                 "status": { "name": "review_doc" },
             },
             "intro_paragraph": { "rich_text": [{ "text": { "content": f"{new_intro}" } }] },
-            "keyword_list": { "rich_text": [{ "text": { "content": f"{keyword_list}" } }] },
-            "missing_keywords": { "rich_text": [{ "text": { "content": f"{missing_keywords}" } }] },
+            "term_analysis": { "rich_text": [{ "text": { "content": f"{term_analysis}" } }] },
+            "gap_analysis": { "rich_text": [{ "text": { "content": f"{gap_analysis}" } }] },
             "tailored_doc_url": { "url": f"{tailored_doc_url}" },
-            "skills": { "rich_text": [{ "text": { "content": f"{skills}" } }] },
+            "highlights": { "rich_text": [{ "text": { "content": f"{highlights}" } }] },
         },
     }
     logger.debug("Payload created")

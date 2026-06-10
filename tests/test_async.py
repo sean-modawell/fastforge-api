@@ -104,10 +104,10 @@ async def test_send_payload_mock_success():
                 "status": { "name": "review_doc" },
             },
             "intro_paragraph": { "rich_text": [{ "text": { "content": "new_intro" } }] },
-            "keyword_list": { "rich_text": [{ "text": { "content": "keyword_list" } }] },
-            "missing_keywords": { "rich_text": [{ "text": { "content": "missing_keywords" } }] },
+            "term_analysis": { "rich_text": [{ "text": { "content": "term_analysis" } }] },
+            "gap_analysis": { "rich_text": [{ "text": { "content": "gap_analysis" } }] },
             "tailored_doc_url": { "url": "tailored_doc_url" },
-            "skills": { "rich_text": [{ "text": { "content": "skills" } }] },
+            "highlights": { "rich_text": [{ "text": { "content": "highlights" } }] },
         },
     }
     mock_response = MagicMock()

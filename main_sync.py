@@ -159,14 +159,14 @@ def forge_doc():
     result = send_prompt(prompt)
     if result is None:
         return jsonify({"status": "error", "message": "AI call failed"}), 400
-    new_intro, keyword_list, missing_keywords, skills = result # These values will be sent to Notion
+    new_intro, term_analysis, gap_analysis, highlights = result # These values will be sent to Notion
     
-    result = create_tailored_doc(drive_service, docs_service, record_id, company, doc_heading, new_intro, skills)
+    result = create_tailored_doc(drive_service, docs_service, record_id, company, doc_heading, new_intro, highlights)
     if result is None:
         return jsonify({"status": "error", "message": "Failed to create tailored document"}), 400
     tailored_doc_url = result
 
-    payload = create_payload(new_intro, keyword_list, missing_keywords, tailored_doc_url, skills)
+    payload = create_payload(new_intro, term_analysis, gap_analysis, tailored_doc_url, highlights)
     send_payload(page_id, payload)
     logger.info("Successfully sent PATCH request")
     logger.info("Workflow complete")

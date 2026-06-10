@@ -93,9 +93,9 @@ def test_create_tailored_doc_mock_success():
             docs_service=mock_docs,
             record_id="R2D2",
             company="NOMA",
-            doc_heading="Software Engineer",
+            doc_heading="Project Brief",
             new_intro="The greatest intro of all time",
-            skills="Python | Automation"
+            highlights="Custom API, Workflow Automation, LLM Integration"
         )
         assert result == "https://docs.google.com/document/d/fake_doc_id_123"
         assert mock_drive.files().copy().execute.called
@@ -110,9 +110,9 @@ def test_create_tailored_doc_real():
         docs_service=docs_service,
         record_id="R2D2",
         company="NOMA",
-        doc_heading="Software Engineer",
+        doc_heading="Project Brief",
         new_intro="The greatest intro of all time",
-        skills="Python | Automation"
+        highlights="Custom API, Workflow Automation, LLM Integration"
     )
     assert result is not None
     assert result.startswith("https://docs.google.com/document/d/")
@@ -146,17 +146,17 @@ def test_scrape_template_real():
 def test_create_payload_success():
     result = create_payload(
         new_intro="Hello world",
-        keyword_list="one | two | three",
-        missing_keywords="four | five | six",
+        term_analysis="one | two | three",
+        gap_analysis="four | five | six",
         tailored_doc_url="www.example.com",
-        skills="seven | eight | nine"
+        highlights="seven | eight | nine"
     )
     assert result is not None
     assert result["properties"]["intro_paragraph"]["rich_text"][0]["text"]["content"] == "Hello world"
-    assert result["properties"]["keyword_list"]["rich_text"][0]["text"]["content"] == "one | two | three"
-    assert result["properties"]["missing_keywords"]["rich_text"][0]["text"]["content"] == "four | five | six"
+    assert result["properties"]["term_analysis"]["rich_text"][0]["text"]["content"] == "one | two | three"
+    assert result["properties"]["gap_analysis"]["rich_text"][0]["text"]["content"] == "four | five | six"
     assert result["properties"]["tailored_doc_url"]["url"] == "www.example.com"
-    assert result["properties"]["skills"]["rich_text"][0]["text"]["content"] == "seven | eight | nine"
+    assert result["properties"]["highlights"]["rich_text"][0]["text"]["content"] == "seven | eight | nine"
 
 # def test_create_payload_missing_field():
 
@@ -165,9 +165,9 @@ def test_create_payload_success():
 def test_send_prompt_mock_success():
     mock_ai_response = {
         "new_intro": "The greatest intro of all time.",
-        "keyword_list": ["Python", "Flask"],
-        "missing_keywords": ["GitHub"],
-        "skills": "Python | Flask | REST APIs"
+        "term_analysis": ["Python", "FastAPI"],
+        "gap_analysis": ["GitHub"],
+        "highlights": "Python | FastAPI | REST APIs"
     }
     mock_response = MagicMock()
     mock_response.text = json.dumps(mock_ai_response)
@@ -175,11 +175,11 @@ def test_send_prompt_mock_success():
         mock_client.return_value.models.generate_content.return_value = mock_response
         result = send_prompt("test prompt")
     assert result is not None
-    new_intro, keyword_list, missing_keywords, skills = result
+    new_intro, term_analysis, gap_analysis, highlights = result
     assert new_intro == "The greatest intro of all time."
-    assert "Python" in keyword_list
-    assert "GitHub" in missing_keywords
-    assert skills == "Python | Flask | REST APIs"
+    assert "Python" in term_analysis
+    assert "GitHub" in gap_analysis
+    assert highlights == "Python | FastAPI | REST APIs"
 
 # def test_send_prompt_mock_exception():
     # assert result is None
@@ -191,13 +191,13 @@ def test_send_prompt_mock_success():
 def test_send_prompt_real():
     mock_prompt = (
         "Respond ONLY with a valid JSON object containing exactly these keys: "
-        "new_intro (string), keyword_list (array of strings), "
-        "missing_keywords (array of strings), skills (string). "
+        "new_intro (string), term_analysis (string), "
+        "gap_analysis (string), highlights (string). "
         "Use placeholder values."
     )
     result = send_prompt(mock_prompt)
     assert result is not None
-    new_intro, keyword_list, missing_keywords, skills = result
+    new_intro, term_analysis, gap_analysis, highlights = result
     assert isinstance(new_intro, str)
-    assert isinstance(keyword_list, list)
-    assert isinstance(skills, str)
+    assert isinstance(term_analysis, str)
+    assert isinstance(highlights, str)

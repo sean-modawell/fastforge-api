@@ -1,5 +1,8 @@
 {
-    "my_name": "name",
-    "base_resume_Id": "url",
-    "resume_template_Id": "url"
+    "my_name": "",
+    "output_folder": "",
+    "base_template_id": "",
+    "tagged_template_id": "",
+    "page_id": "",
+    "render_service_id": ""
 }
