@@ -38,15 +38,15 @@ FastForge works as follows:
 1. Determine Trigger
     - Workflow is triggered by an "event". This could be a new client added in your CRM, an updated status, a scheduled QBR, new prospect, really anything. 
 2. Gather context
-    - FastForge fetches all content related to the workflow from your database (additional sources may be connected as well)
+    - FastForge fetches all content related to the workflow from your database (additional sources may be connected as well).
 3. Pass to GenAI
     - A prompt is sent to AI for deep analysis, complete with instructions, requirements, templates, and context.
 4. Process Response
-    - The response is processed and saved.
+    - The response is received in JSON format and processed into separate sections.
 5. Forge documentation
-    - The AI's recommendations are injected into a template to forge a new document.
+    - The AI's recommendations are injected into a template to forge the new document.
 6. Update database and stakeholders
-    - Your records are updated with a link to the new document, the AI response for reference, and any additional information you would like.
+    - Your records are updated with a link to the new document, the AI responses for reference, and any additional information you would like.
     - Notifications can be sent to stakeholders for review.
 
 [Back to Top](#table-of-contents)
@@ -72,20 +72,18 @@ FastForge can simultaneously reduce bottlenecks across various departments
 Due to the custom API and async cababilities, multiple endpoints can be created to handle as many workflows as you like!
 
 
-In my personal workflow, I update the record to "Review". There, I can look over the work, make any adjustments as needed, and then execute it.
+In my personal workflow, I have a review stage, allowing my to look over the work and make any necessary adjustments before external actions are performed.
 
-Components:
-Database "Source of Truth" - CRM(Salesforce, HubSpot), ERP, HCM/HRIS, or SQL based - I use Notion
-Server - Where the script lives. Can be local or Cloud - I use Render
-Framework - FastAPI or Flask - Flask for small scale
-Cloud DocHub - Google Drive, OneDrive, Sharepoint, Dropbox - I use Google Drive
-AI/LLM - ChatGPT, Gemini, Claude, Internal - I use Google Gemini Flash model
 
 [Back to Top](#table-of-contents)
 
 ---
 
 ## Current Features
+
+
+
+
 
 [Back to Top](#table-of-contents)
 
@@ -187,6 +185,12 @@ Configuration that doesn’t belong in `.env`. This is where you adjust things l
 
 ### Prerequisites
 
+1. A Notion Database
+2. Google Account (personal is fine)
+3. An IDE installed
+4. Git installed
+5. Python & PIP installed
+
 [Back to Top](#table-of-contents)
 
 ### Installation
@@ -205,6 +209,18 @@ Clone the repo and set up a virtual environment:
 
 ### Configuration
 
+Here is a quick overview of the steps to finish your setup.
+1. Create your templates within Google Docs
+2. Gather API Keys
+3. 
+4. 
+5. 
+
+
+
+
+The setup folder contains templates for all necessary files under `/examples`. Move these files to the `/setup` directory and remove `.example` from the file names.
+
 #### Get your API keys
 
 - **Notion**: Go to [notion.so/my-integrations](https://www.notion.so/my-integrations), create a new integration, and copy the secret key. Make sure your integration has access to the database you’re using.
@@ -218,7 +234,7 @@ See below for notes on OAuth vs Service_account
 
 Copy the template above into a new `.env` file in the root folder and fill in your keys.
 
-#### Set up your template in Google Drive (WIP)
+#### Set up your templates in Google Drive (WIP)
 
 Store your **base_template** as a Google Doc. The script fetches it fresh on each run, so any updates you make to the doc are automatically picked up.
 
@@ -230,7 +246,9 @@ Edit `prompt.txt` with the instructions you want to send to Gemini. Use `{{tags}
 
 #### Configure `config.json` (WIP)
 
-Adjust field names and settings to match your Notion database setup.
+Here is where you will place the page ID's to your templates within Google Docs. Every Google Doc has a unique ID which can be found in the URL. Navigate to the document. Your ID will be between /d/ and /edit as seen below:
+
+https://docs.google.com/document/d/`1dizHrezuyheme2ewSEGolSw5C4zKcn0Ky23KgO7u-p2M`/edit?tab=t.0
 
 [Back to Top](#table-of-contents)
 
@@ -252,7 +270,7 @@ While this is primarily a personal portfolio project, feedback, issue reports, a
 
 ## License
 
->Pending
+MIT License - Copyright (c) 2026 Sean Modawell
 
 [Back to Top](#table-of-contents)
 
