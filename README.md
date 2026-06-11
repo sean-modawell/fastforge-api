@@ -19,8 +19,7 @@ An internal automation engine that generates context-aware documents to reduce c
 - [Limitations & Future Scope](#limitations--future-scope)
 - [Technical Architecture](#technical-architecture)
     - [Tools Used](#tools-used)
-    - [How it Works]()
-    - [File Reference](#file-reference)
+    - [How it Works](#how-it-works)
 - [Getting Started](#getting-started)
     - [Prerequisites](#prerequisites)
     - [Installation](#installation)
@@ -72,7 +71,7 @@ FastForge can simultaneously reduce bottlenecks across various departments
 Due to the custom API and async cababilities, multiple endpoints can be created to handle as many workflows as you like!
 
 
-In my personal workflow, I have a review stage, allowing my to look over the work and make any necessary adjustments before external actions are performed.
+In my personal workflow, I have a review stage, allowing me to look over the work and make any necessary adjustments before external actions are performed.
 
 
 [Back to Top](#table-of-contents)
@@ -138,6 +137,8 @@ Creating your own AI model, utilizing machine learning to train it on your own i
 
 ### Tools Used
 
+Here are each of the components I used for my particular workflow
+
 |Component                 |Tool                         |Why                                     |
 |--------------------------|-----------------------------|----------------------------------------|
 |Database (Source of Truth)|Notion                       |Free API, great for project management  |
@@ -157,39 +158,17 @@ Creating your own AI model, utilizing machine learning to train it on your own i
 
 The app is built with **Flask** and can be hosted locally or on a free [Render](https://render.com/) instance.
 
-### File Reference
-
-#### `.env`
-
-- Stores your secret keys. **Never commit this file to version control.**
-- Create a `.env` file in the root folder using the `.env.example`
-
-
-#### `prompt.txt`
-
-- The prompt sent to Gemini. The entire contents of this file are read and submitted as-is — no comments are supported.
-- Use `{{double_curly_braces}}` for dynamic tags that get replaced at runtime. For example:
-    - Here is my content: {{page_content}}
-    - Here is my template: {{template_text}}
-
-
-#### `config.json`
-
-Configuration that doesn’t belong in `.env`. This is where you adjust things like Notion database field names or the number of fields you want to process — without needing to touch the Python code.
-
-[Back to Top](#table-of-contents)
-
 ---
 
 ## Getting Started
 
 ### Prerequisites
 
-1. A Notion Database
+1. Notion Database
 2. Google Account (personal is fine)
-3. An IDE installed
-4. Git installed
-5. Python & PIP installed
+3. IDE
+4. Git
+5. Python & PIP
 
 [Back to Top](#table-of-contents)
 
@@ -212,11 +191,7 @@ Clone the repo and set up a virtual environment:
 Here is a quick overview of the steps to finish your setup.
 1. Create your templates within Google Docs
 2. Gather API Keys
-3. 
-4. 
-5. 
-
-
+3. Update template/example files in `/setup`
 
 
 The setup folder contains templates for all necessary files under `/examples`. Move these files to the `/setup` directory and remove `.example` from the file names.
@@ -236,7 +211,7 @@ Copy the template above into a new `.env` file in the root folder and fill in yo
 
 #### Set up your templates in Google Drive (WIP)
 
-Store your **base_template** as a Google Doc. The script fetches it fresh on each run, so any updates you make to the doc are automatically picked up.
+Store your **base_template** as a Google Doc. This serves as an example for the AI to reference. The script fetches it fresh on each run, so any updates you make to the doc are automatically picked up.
 
 For customizing, it’s recommended to maintain a second Google Doc as a **tagged_template**, a copy of your base template with sections replaced by `{{TAGS}}`. Gemini’s suggestions can then be slotted directly into the template.
 
@@ -249,12 +224,6 @@ Edit `prompt.txt` with the instructions you want to send to Gemini. Use `{{tags}
 Here is where you will place the page ID's to your templates within Google Docs. Every Google Doc has a unique ID which can be found in the URL. Navigate to the document. Your ID will be between /d/ and /edit as seen below:
 
 https://docs.google.com/document/d/`1dizHrezuyheme2ewSEGolSw5C4zKcn0Ky23KgO7u-p2M`/edit?tab=t.0
-
-[Back to Top](#table-of-contents)
-
----
-
-## Usage & API Examples
 
 [Back to Top](#table-of-contents)
 
@@ -286,6 +255,13 @@ You may also reach out to me over [LinkedIn](https://www.linkedin.com/in/sean-mo
 ---
 
 ## Further Reading
+
+- [Hosting: Locally vs Render](#hosting)
+- [Prompt Design](#prompt-design)
+- [Google Services: OAuth vs service_account](#google-services-oauth-vs-service_account)
+- [Notion API Notes](#notion-api-notes)
+
+---
 
 ### Hosting
 
@@ -387,21 +363,3 @@ plain_text is READ-ONLY. It is to provide "a convenient way for developers to ac
 This is the property you will want to access when using a GET request
 
 In order to POST text, you will need to write to the text.content property. Any additional formatting is optional.
-
------
-
-### Notes on my Process
-
-This is a personal project to replace a MS Power Automate flow I created.
-
-The Steps to my project:
-1. Map the Process
-2. Write the framework for main webhook
-3. Create all stub functions
-4. Map the functions within the webhook
-5. Code a function and its dependencies
-6. Test/Debug the function
-7. Repeat steps 5 & 6 until script complete
-8. Complete Notion API setup
-9. Host script locally for end-to-end testing/debugging
-10. Deploy application on Render
