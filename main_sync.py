@@ -151,7 +151,7 @@ def forge_doc():
         return jsonify({"status": "error", "message": "Failed to pull template"}), 400
     template_text = result
 
-    result = create_prompt(page_content, template_text, prompt_file="setup/prompt.txt")
+    result = create_prompt(page_content, template_text)
     if result is None:
         return jsonify({"status": "error", "message": "Failed to create prompt"}), 400
     prompt = result

@@ -156,7 +156,7 @@ async def forge_doc(request: Request):
         raise HTTPException(status_code=400, detail="Failed to pull template")
     template_text = result
 
-    result = create_prompt(page_content, template_text, prompt_file="prompt.txt")
+    result = create_prompt(page_content, template_text)
     if result is None:
         raise HTTPException(status_code=400, detail="Failed to create prompt")
     prompt = result

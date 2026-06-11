@@ -74,13 +74,15 @@ TEST_PROMPT_PATH = os.path.join(BASE_DIR, "mock_prompt.txt")
 def test_create_prompt_full():
     test_content = "practice content"
     test_template_text = "practice template text"
-    return_prompt = create_prompt(test_content, test_template_text, prompt_file=TEST_PROMPT_PATH)
+    with patch("core.helpers.PROMPT_PATH", TEST_PROMPT_PATH):
+        return_prompt = create_prompt(test_content, test_template_text)
     assert return_prompt == "Content: practice content Template: practice template text"
 
 def test_create_prompt_missing_fields():
     test_content = "practice content"
     test_template_text =  ""
-    return_prompt = create_prompt(test_content, test_template_text, prompt_file=TEST_PROMPT_PATH)
+    with patch("core.helpers.PROMPT_PATH", TEST_PROMPT_PATH):
+        return_prompt = create_prompt(test_content, test_template_text)
     assert return_prompt == "Content: practice content Template: "
 
 # --- create_tailored_resume ---

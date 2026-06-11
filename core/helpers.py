@@ -50,8 +50,8 @@ def scrape_template(drive_service): # Pull Resume from Google Drive as string
     ).execute().decode("utf-8") # Google export() does not auto-decode/convert "text/plain". We need to convert it to a string with .decode()
     return template_text
 
-def create_prompt(page_content, template_text, prompt_file=PROMPT_PATH): # Call prompt.txt, insert current template TEXT and doc_content TEXT
-    with open(prompt_file, "r") as f:
+def create_prompt(page_content, template_text): # Call prompt.txt, insert current template TEXT and doc_content TEXT
+    with open(PROMPT_PATH, "r") as f:
         prompt = f.read()
     prompt = prompt.replace("{{page_content}}", page_content)
     prompt = prompt.replace("{{template_text}}", template_text)
