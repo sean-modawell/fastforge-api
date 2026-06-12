@@ -2,7 +2,7 @@
 
 
 # --- Modules & Packages ---
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException, BackgroundTasks
 from fastapi.responses import JSONResponse
 import os
 import json
@@ -121,13 +121,7 @@ async def send_payload(page_id, payload): # Push API call to Notion
 
 
 # --- Main Webhook ---
-@app.post('/api/v1/doc/forge')
-async def forge_doc(request: Request):
-    if not await verify_notion_signature(request):
-        logger.error("Error: Invalid signature")
-        raise HTTPException(status_code=401, detail="Unauthorized request")
-    logger.debug("Signature verified")
-
+async def forge_doc(payload):
     creds = get_credentials()
     drive_service = get_drive_service(creds)
     docs_service = get_docs_service(creds)
@@ -176,3 +170,18 @@ async def forge_doc(request: Request):
     logger.info("Successfully sent PATCH request")
     logger.info("Workflow complete")
     return JSONResponse(content={"status": "success", "message": "POST request processed successfully"}, status_code=200)
+
+
+@app.post('/api/v1/doc/forge')
+async def webhook(request: Request, background_tasks: BackgroundTasks):
+    if not await verify_notion_signature(request):
+        logger.error("Error: Invalid signature")
+        raise HTTPException(status_code=401, detail="Unauthorized request")
+    logger.debug("Signature verified")
+
+    payload = await request.json()
+    if not payload:
+        raise HTTPException(status_code=400, detail="No data provided")
+
+    background_tasks.add_task(forge_doc, payload)
+    return JSONResponse(content={"status": "received"}, status_code=200)

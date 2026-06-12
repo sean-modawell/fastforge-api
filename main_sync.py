@@ -8,6 +8,7 @@ import json
 import requests
 import hmac
 import hashlib
+import threading
 
 
 # --- Helper Functions ---
@@ -116,22 +117,12 @@ def send_payload(page_id, payload): # Push API call to Notion
 
 
 # --- Main Webhook ---
-@app.route('/api/v1/doc/forge', methods=['POST'])
-def forge_doc():
-    if not verify_notion_signature(request):
-        logger.error("Error: Invalid signature")
-        return jsonify({"status": "error", "message": "Unauthorized request"}), 401
-    logger.debug("Signature verified")
-
+def forge_doc(payload):
     creds = get_credentials()
     drive_service = get_drive_service(creds)
     docs_service = get_docs_service(creds)
 
-    incoming_data = request.json
-    if not incoming_data:
-        return jsonify({"status": "error", "message": "No data provided"}), 400
-
-    result = extract_json_data(incoming_data)
+    result = extract_json_data(payload)
     if result is None:
         return jsonify({"status": "error", "message": "Failed to parse data"}), 400
     page_id = result
@@ -171,6 +162,22 @@ def forge_doc():
     logger.info("Successfully sent PATCH request")
     logger.info("Workflow complete")
     return jsonify({"status": "success", "message": "POST request processed successfully"}), 200
+
+@app.route('/api/v1/doc/forge', methods=['POST'])
+def receive_webhook():
+    if not verify_notion_signature(request):
+        logger.error("Error: Invalid signature")
+        return jsonify({"status": "error", "message": "Unauthorized request"}), 401
+    logger.debug("Signature verified")
+
+    payload = request.get_json()
+    if not payload:
+        return jsonify({"status": "error", "message": "No data provided"}), 400
+
+    thread = threading.Thread(target=forge_doc, arg=payload)
+    thread.daemon = True
+    thread.start()
+    return jsonify({"status": "received"}), 200
 
 if __name__ == '__main__':
     print("Starting local server on port 5000...")
