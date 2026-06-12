@@ -163,6 +163,7 @@ def forge_doc(payload):
     logger.info("Workflow complete")
     return jsonify({"status": "success", "message": "POST request processed successfully"}), 200
 
+
 @app.route('/api/v1/doc/forge', methods=['POST'])
 def receive_webhook():
     if not verify_notion_signature(request):
@@ -174,7 +175,7 @@ def receive_webhook():
     if not payload:
         return jsonify({"status": "error", "message": "No data provided"}), 400
 
-    thread = threading.Thread(target=forge_doc, arg=payload)
+    thread = threading.Thread(target=forge_doc, args=(payload,))
     thread.daemon = True
     thread.start()
     return jsonify({"status": "received"}), 200

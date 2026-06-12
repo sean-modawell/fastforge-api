@@ -173,7 +173,7 @@ async def forge_doc(payload):
 
 
 @app.post('/api/v1/doc/forge')
-async def webhook(request: Request, background_tasks: BackgroundTasks):
+async def receive_webhook(request: Request, background_tasks: BackgroundTasks):
     if not await verify_notion_signature(request):
         logger.error("Error: Invalid signature")
         raise HTTPException(status_code=401, detail="Unauthorized request")
