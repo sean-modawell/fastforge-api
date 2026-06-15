@@ -124,44 +124,43 @@ def forge_doc(payload):
 
     result = extract_json_data(payload)
     if result is None:
-        return jsonify({"status": "error", "message": "Failed to parse data"}), 400
+        return
     page_id = result
 
     result = request_content(page_id)
     if result is None:
-        return jsonify({"status": "error", "message": "Could not locate page_id"}), 400
+        return
     page_content = result
 
     result = request_fields(page_id)
     if result is None:
-        return jsonify({"status": "error", "message": "Could not pull additional fields"}), 400
+        return
     record_id, doc_heading, company = result
 
     result = scrape_template(drive_service)
     if result is None:
-        return jsonify({"status": "error", "message": "Failed to pull template"}), 400
+        return
     template_text = result
 
     result = create_prompt(page_content, template_text)
     if result is None:
-        return jsonify({"status": "error", "message": "Failed to create prompt"}), 400
+        return
     prompt = result
 
     result = send_prompt(prompt)
     if result is None:
-        return jsonify({"status": "error", "message": "AI call failed"}), 400
+        return
     new_intro, term_analysis, gap_analysis, highlights = result # These values will be sent to Notion
     
     result = create_tailored_doc(drive_service, docs_service, record_id, company, doc_heading, new_intro, highlights)
     if result is None:
-        return jsonify({"status": "error", "message": "Failed to create tailored document"}), 400
+        return
     tailored_doc_url = result
 
     payload = create_payload(new_intro, term_analysis, gap_analysis, tailored_doc_url, highlights)
     send_payload(page_id, payload)
     logger.info("Successfully sent PATCH request")
     logger.info("Workflow complete")
-    return jsonify({"status": "success", "message": "POST request processed successfully"}), 200
 
 
 @app.route('/api/v1/doc/forge', methods=['POST'])
@@ -173,11 +172,14 @@ def receive_webhook():
 
     payload = request.get_json()
     if not payload:
+        logger.error("Error: No data provided")
         return jsonify({"status": "error", "message": "No data provided"}), 400
 
     thread = threading.Thread(target=forge_doc, args=(payload,))
     thread.daemon = True
     thread.start()
+    logger.debug("Starting thread...")
+    logger.debug("Sending response to client...")
     return jsonify({"status": "received"}), 200
 
 if __name__ == '__main__':

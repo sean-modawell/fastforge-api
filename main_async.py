@@ -126,50 +126,45 @@ async def forge_doc(payload):
     drive_service = get_drive_service(creds)
     docs_service = get_docs_service(creds)
 
-    incoming_data = await request.json()
-    if not incoming_data:
-        raise HTTPException(status_code=400, detail="No data provided")
-
-    result = extract_json_data(incoming_data)
+    result = extract_json_data(payload)
     if result is None:
-        raise HTTPException(status_code=400, detail="Failed to parse data")
+        return
     page_id = result
 
     result = await request_content(page_id)
     if result is None:
-        raise HTTPException(status_code=400, detail="Could not locate page_id")
+        return
     page_content = result
 
     result = await request_fields(page_id)
     if result is None:
-        raise HTTPException(status_code=400, detail="Could not pull additional fields")
+        return
     record_id, doc_heading, company = result
 
     result = scrape_template(drive_service)
     if result is None:
-        raise HTTPException(status_code=400, detail="Failed to pull template")
+        return
     template_text = result
 
     result = create_prompt(page_content, template_text)
     if result is None:
-        raise HTTPException(status_code=400, detail="Failed to create prompt")
+        return
     prompt = result
 
     result = send_prompt(prompt)
     if result is None:
-        raise HTTPException(status_code=400, detail="AI call failed")
+        return
     new_intro, term_analysis, gap_analysis, highlights = result # These values will be sent to Notion
     
     result = create_tailored_doc(drive_service, docs_service, record_id, company, doc_heading, new_intro, highlights)
     if result is None:
-        raise HTTPException(status_code=400, detail="Failed to create tailored document")
+        return
     tailored_doc_url = result
 
     payload = create_payload(new_intro, term_analysis, gap_analysis, tailored_doc_url, highlights)
     await send_payload(page_id, payload)
     logger.info("Successfully sent PATCH request")
     logger.info("Workflow complete")
-    return JSONResponse(content={"status": "success", "message": "POST request processed successfully"}, status_code=200)
 
 
 @app.post('/api/v1/doc/forge')
@@ -181,7 +176,10 @@ async def receive_webhook(request: Request, background_tasks: BackgroundTasks):
 
     payload = await request.json()
     if not payload:
+        logger.error("Error: No data provided")
         raise HTTPException(status_code=400, detail="No data provided")
 
     background_tasks.add_task(forge_doc, payload)
+    logger.debug("Starting background task...")
+    logger.debug("Sending response to client...")
     return JSONResponse(content={"status": "received"}, status_code=200)
