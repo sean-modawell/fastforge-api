@@ -11,7 +11,8 @@ Documented iteration changes
     - Files and folders renamed
     - Helper functions 
 - The main script now has a **sync** and **async** version
-    - Flask and Requests library replaced by FastAPI and HTTPX
+    - Flask and Requests library replaced by FastAPI and HTTPX in the **async** version
+- Added `INSTALL.md` for detailed instructions 
 - Greater exception handling
     - Retry loop added for the following exceptions:
         - Timeouts

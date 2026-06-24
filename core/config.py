@@ -1,4 +1,11 @@
 ## Intro
+'''
+This script handles the following:
+- Logging Configuration
+- Loading Environment Variables
+- Google OAuth 2.0 Workflow
+'''
+
 
 # --- Modules & Packages ---
 import os
@@ -7,6 +14,11 @@ from dotenv import load_dotenv
 from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request as GoogleRequest
 from googleapiclient.discovery import build
+import logging
+
+# --- Logging Settings ---
+logging.basicConfig(level=logging.DEBUG) # DEBUG > INFO > WARNING > ERROR > CRITICAL
+logger = logging.getLogger(__name__)
 
 # --- Load Environment Variables ---
 load_dotenv("/etc/secrets/.env") # Path for Render
@@ -20,6 +32,9 @@ gemini_api_key = os.environ["gemini_local_api_key"]
 SCOPES = ["https://www.googleapis.com/auth/drive", "https://www.googleapis.com/auth/documents"]
 
 def get_credentials():
+    logging.debug("refresh_token: %s", bool(os.environ.get("GOOGLE_REFRESH_TOKEN")))
+    logging.debug("client_id: %s", bool(os.environ.get("GOOGLE_CLIENT_ID")))
+    logging.debug("client_secret: %s", bool(os.environ.get("GOOGLE_CLIENT_SECRET")))
     creds = Credentials(
         token=None,
         refresh_token=os.environ["GOOGLE_REFRESH_TOKEN"],

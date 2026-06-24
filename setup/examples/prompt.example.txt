@@ -1,0 +1,17 @@
+1. Define the task
+
+2. Provide Context
+
+3. Instructions
+
+4. Input Fields
+
+5. Output Template
+** Provide a JSON schema for the AI to match
+
+template_data = {{
+    "new_intro": "string",
+    "term_analysis": "array of strings",
+    "gap_analysis": "string",
+    "highlights": "string",
+}}

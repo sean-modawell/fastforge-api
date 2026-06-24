@@ -1,17 +1,28 @@
 ## Intro
+'''
+This script handles several items:
+- Fetching Current Date for Documentation Labeling
+- Setting the Absolute Directory Path (both local and cloud server deployement) for:
+    - config.json
+    - prompt.txt
+- Loading "config.json"
+- Helper Functions that are the same for sync and async workflows
+    - extract_json_data(): Pulls record ID from POST request
+    - scrape_template(): Pulls reference/example doc to send to LLM
+    - create_prompt(): Combines prompt, context, and your base_template to send to the LLM
+    - send_prompt(): GET request to LLM. Saves and splits the response into sections.
+    - create_tailored_doc(): Duplicates tagged template and replaces {{tagged}} sections with LLM responses. Saves URL to the new document
+    - create_payload(): PATCH request to record ID in Database, including a link to the new document.
+'''
 
 # --- Modules & Packages ---
-from core.config import get_credentials, get_drive_service, get_docs_service, gemini_api_key
-import logging
+from core.config import get_credentials, get_drive_service, get_docs_service, gemini_api_key, logger
 from datetime import datetime
 import json
 from google import genai
 from google.genai import types
 import os
 
-# --- Logging Settings ---
-logging.basicConfig(level=logging.DEBUG) # DEBUG > INFO > WARNING > ERROR > CRITICAL
-logger = logging.getLogger(__name__)
 
 # --- Current Date ---
 now = datetime.now()
@@ -42,7 +53,7 @@ def extract_json_data(incoming_data): # Process the API call from Notion and pul
         logger.error("Response is not valid JSON")
         return None
 
-def scrape_template(drive_service): # Pull Resume from Google Drive as string
+def scrape_template(drive_service): # Pull Reference Doc from Google Drive as string
     template_id = config["base_template_id"]
     template_text = drive_service.files().export(
         fileId=template_id,

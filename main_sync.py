@@ -1,5 +1,13 @@
 ## Intro
-
+'''
+This script does the following:
+- Creates Flask instance
+- Defines syncronous specific functions
+- Defines complete workflow
+- Receives webhook at API endpoint
+    - Responds to client with success or failure message
+    - Starts workflow as a new thread
+'''
 
 # --- Modules & Packages ---
 from flask import Flask, request, jsonify
@@ -12,8 +20,8 @@ import threading
 
 
 # --- Helper Functions ---
-from core.helpers import extract_json_data, scrape_template, create_prompt, send_prompt, create_tailored_doc, create_payload, logger
-from core.config import get_credentials, get_drive_service, get_docs_service, database_api_key, notion_verification_token
+from core.helpers import extract_json_data, scrape_template, create_prompt, send_prompt, create_tailored_doc, create_payload
+from core.config import get_credentials, get_drive_service, get_docs_service, database_api_key, notion_verification_token, logger
 
 # --- Initial Setup ---
 app = Flask(__name__)
