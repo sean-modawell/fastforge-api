@@ -2,7 +2,7 @@
 '''
 This script does the following:
 - Creates Flask instance
-- Defines syncronous specific functions
+- Defines synchronous specific functions
 - Defines complete workflow
 - Receives webhook at API endpoint
     - Responds to client with success or failure message
@@ -21,7 +21,7 @@ import threading
 
 # --- Helper Functions ---
 from core.helpers import extract_json_data, scrape_template, create_prompt, send_prompt, create_tailored_doc, create_payload
-from core.config import get_credentials, get_drive_service, get_docs_service, database_api_key, notion_verification_token, logger
+from core.config import get_credentials, get_drive_service, get_docs_service, logger, DATABASE_ACCESS_TOKEN, NOTION_VERIFICATION_TOKEN
 
 # --- Initial Setup ---
 app = Flask(__name__)
@@ -41,7 +41,7 @@ def verify_notion_signature(request):
         return False
 
     yarn = 'sha256=' + hmac.new(
-        notion_verification_token.encode(),
+        NOTION_VERIFICATION_TOKEN.encode(),
         body,
         hashlib.sha256
     ).hexdigest()
@@ -51,7 +51,7 @@ def request_content(page_id): # Request page content
     url = f"https://api.notion.com/v1/pages/{page_id}/markdown"
     headers = {
         "Notion-Version": "2026-03-11",
-        "Authorization": f"Bearer {database_api_key}"
+        "Authorization": f"Bearer {DATABASE_ACCESS_TOKEN}"
     }
     logger.debug("Requesting page contents...")
     try:
@@ -78,7 +78,7 @@ def request_fields(page_id): # Request and save additional fields
     url = f"https://api.notion.com/v1/pages/{page_id}"
     headers = {
         "Notion-Version": "2026-03-11",
-        "Authorization": f"Bearer {database_api_key}"
+        "Authorization": f"Bearer {DATABASE_ACCESS_TOKEN}"
     }
     logger.info("Sending GET request for additional fields...")
     try:
@@ -113,7 +113,7 @@ def send_payload(page_id, payload): # Push API call to Notion
     url = f"https://api.notion.com/v1/pages/{page_id}"
     headers = {
         "Notion-Version": "2026-03-11",
-        "Authorization": f"Bearer {database_api_key}",
+        "Authorization": f"Bearer {DATABASE_ACCESS_TOKEN}",
         "Content-Type": "application/json"
     }
     logger.info("Sending PATCH request")

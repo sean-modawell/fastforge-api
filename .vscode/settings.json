@@ -1,0 +1,16 @@
+{
+    "cSpell.words": [
+        "aistudio",
+        "creds",
+        "dotenv",
+        "fastforge",
+        "genai",
+        "googleapiclient",
+        "gunicorn",
+        "pycache",
+        "pytest",
+        "strikethrough",
+        "uvicorn",
+        "venv"
+    ]
+}

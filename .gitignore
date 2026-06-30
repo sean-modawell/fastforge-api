@@ -1,6 +1,7 @@
 # List files I want GitHub to ignore
 .env
 .venv
+.vscode
 config.json
 credentials.json
 scratch.py
@@ -9,7 +10,6 @@ token.json
 api-response.json
 notion_sandbox.py
 test_request.http
-generate_token.py
 google_check.py
 
 __pycache__/

@@ -2,7 +2,7 @@
 '''
 This script handles several items:
 - Fetching Current Date for Documentation Labeling
-- Setting the Absolute Directory Path (both local and cloud server deployement) for:
+- Setting the Absolute Directory Path (both local and cloud server deployment) for:
     - config.json
     - prompt.txt
 - Loading "config.json"
@@ -16,7 +16,7 @@ This script handles several items:
 '''
 
 # --- Modules & Packages ---
-from core.config import get_credentials, get_drive_service, get_docs_service, gemini_api_key, logger
+from core.config import get_credentials, get_drive_service, get_docs_service, GEMINI_API_KEY, logger
 from datetime import datetime
 import json
 from google import genai
@@ -70,7 +70,7 @@ def create_prompt(page_content, template_text): # Call prompt.txt, insert curren
 # Add a try/exception to make sure the page_content and template_text are not blank.
 
 def send_prompt(prompt): # Send & Receive
-    client = genai.Client(api_key=gemini_api_key)
+    client = genai.Client(api_key=GEMINI_API_KEY)
     logger.info("Sending prompt to Gemini. Please wait...")
     try:
         response = client.models.generate_content(

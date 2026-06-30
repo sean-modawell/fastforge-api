@@ -17,16 +17,16 @@ from googleapiclient.discovery import build
 import logging
 
 # --- Logging Settings ---
-logging.basicConfig(level=logging.DEBUG) # DEBUG > INFO > WARNING > ERROR > CRITICAL
+logging.basicConfig(level=logging.WARNING) # DEBUG > INFO > WARNING > ERROR > CRITICAL
 logger = logging.getLogger(__name__)
 
 # --- Load Environment Variables ---
 load_dotenv("/etc/secrets/.env") # Path for Render
 load_dotenv("setup/.env") # Local Path
 
-database_api_key = os.environ["notion_local_api_key"]
-notion_verification_token = os.environ["notion_verification_token"]
-gemini_api_key = os.environ["gemini_local_api_key"]
+DATABASE_ACCESS_TOKEN = os.environ["NOTION_ACCESS_TOKEN"]
+NOTION_VERIFICATION_TOKEN = os.environ["NOTION_VERIFICATION_TOKEN"]
+GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
 
 # --- Google OAuth 2.0 ---
 SCOPES = ["https://www.googleapis.com/auth/drive", "https://www.googleapis.com/auth/documents"]
